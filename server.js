@@ -996,21 +996,39 @@ app.delete('/api/orders/:orderId', (req, res) => {
     }
 });
 
-// Configure SMTP email transporter
-const emailTransporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT),
-    secure: process.env.SMTP_SECURE === 'true', // true for port 465, false for other ports
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-    tls: {
-        rejectUnauthorized: false // For self-signed certificates
-    }
-});
+// Configure email transporter (SendGrid or SMTP)
+let emailTransporter;
 
-// Verify SMTP connection on startup
+if (process.env.SENDGRID_API_KEY) {
+    // Use SendGrid (recommended for cloud hosting like Render)
+    emailTransporter = nodemailer.createTransport({
+        host: 'smtp.sendgrid.net',
+        port: 587,
+        secure: false,
+        auth: {
+            user: 'apikey',
+            pass: process.env.SENDGRID_API_KEY
+        }
+    });
+    console.log('📧 Using SendGrid for email delivery');
+} else {
+    // Fallback to direct SMTP
+    emailTransporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT),
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+        },
+        tls: {
+            rejectUnauthorized: false
+        }
+    });
+    console.log('📧 Using SMTP for email delivery');
+}
+
+// Verify email connection on startup
 emailTransporter.verify(function(error, success) {
     if (error) {
         console.log('❌ SMTP Connection Error:', error.message);
