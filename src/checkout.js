@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     var cart = new ShoppingCart();
     var DELIVERY_FEE = 2000;
-    var API_BASE = 'http://localhost:3001/api';
+    var API_BASE = 'https://active-zone-hub.onrender.com/api';
     var deliveryMethod = 'pickup';
     var memberType = 'new';
     

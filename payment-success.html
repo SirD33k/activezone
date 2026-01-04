@@ -174,7 +174,7 @@
         
         if (reference) {
             // Verify payment with backend
-            fetch('http://localhost:3001/api/verify-payment/' + reference)
+            fetch('https://active-zone-hub.onrender.com/api/verify-payment/' + reference)
                 .then(response => response.json())
                 .then(result => {
                     console.log('Verification result:', result);

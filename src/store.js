@@ -2,7 +2,7 @@
 
 // Initialize cart (ShoppingCart class is loaded from cartManager.js)
 const cart = new ShoppingCart();
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = 'https://active-zone-hub.onrender.com/api';
 
 // ============================================
 // FETCH AND RENDER PRODUCTS FROM GYM MASTER API
