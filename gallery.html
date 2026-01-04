@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="./images/azh-favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gallery | Active Zone Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="container">
+                <a href="index.html" class="logo">
+                    <img src="./images/azh-white-logo.png" alt="Active Zone Hub" class="logo-img">
+                    <span class="logo-text">Active Zone Hub</span>
+                </a>
+                <button class="menu-toggle" aria-label="Toggle navigation">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="store.html">RDX Store</a></li>
+                    <li><a href="membership.html">Membership</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="membership.html" class="btn-primary">Join Now</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <header class="page-header"
+            style="background-image: url('./images/hero/hero-gallery.jpg')">
+            <h1>Our <span class="text-gold">Gallery</span></h1>
+        </header>
+
+        <section class="gallery-section">
+            <div class="container">
+                <h2>Explore Our <span class="text-gold">Facilities</span></h2>
+                <p class="section-subtitle">A glimpse into our world-class amenities and vibrant community</p>
+                
+                <!-- Category Filters -->
+                <div class="gallery-filters">
+                    <button class="gallery-filter-btn active" data-filter="all">All</button>
+                    <button class="gallery-filter-btn" data-filter="gym">Gym</button>
+                    <button class="gallery-filter-btn" data-filter="salon">Salon</button>
+                    <button class="gallery-filter-btn" data-filter="football">Football Pitch</button>
+                    <button class="gallery-filter-btn" data-filter="games">Games</button>
+                    <button class="gallery-filter-btn" data-filter="restaurant">Restaurant</button>
+                    <button class="gallery-filter-btn" data-filter="events">Events</button>
+                </div>
+
+                <!-- Masonry Gallery Grid -->
+                <div class="masonry-gallery" id="masonryGallery">
+                    <!-- Gym Images -->
+                    <div class="masonry-item" data-category="gym">
+                        <img src="./images/gallery/gallery-1.jpg" alt="Gym Equipment">
+                        <div class="masonry-overlay">
+                            <h3>State-of-the-Art Equipment</h3>
+                            <p>Gym</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item masonry-tall" data-category="gym">
+                        <img src="./images/hero/hero-gym-1.jpg" alt="Gym Interior">
+                        <div class="masonry-overlay">
+                            <h3>Premium Fitness Space</h3>
+                            <p>Gym</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item" data-category="gym">
+                        <img src="./images/hero/hero-gym-5.jpg" alt="Gym Training">
+                        <div class="masonry-overlay">
+                            <h3>Personal Training Area</h3>
+                            <p>Gym</p>
+                        </div>
+                    </div>
+
+                    <!-- Salon Images -->
+                    <div class="masonry-item" data-category="salon">
+                        <img src="./images/services/salon-1.jpg" alt="Salon Service">
+                        <div class="masonry-overlay">
+                            <h3>Luxury Facial Treatments</h3>
+                            <p>Salon</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item masonry-wide" data-category="salon">
+                        <img src="./images/services/salon-2.jpg" alt="Salon Interior">
+                        <div class="masonry-overlay">
+                            <h3>Premium Salon Experience</h3>
+                            <p>Salon</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item" data-category="salon">
+                        <img src="./images/services/salon-4.jpg" alt="Beauty Services">
+                        <div class="masonry-overlay">
+                            <h3>Professional Grooming</h3>
+                            <p>Salon</p>
+                        </div>
+                    </div>
+
+                    <!-- Football Pitch -->
+                    <div class="masonry-item masonry-tall" data-category="football">
+                        <img src="./images/gallery/gallery-4.jpg" alt="Football Pitch">
+                        <div class="masonry-overlay">
+                            <h3>Professional Turf</h3>
+                            <p>Football Pitch</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item" data-category="football">
+                        <img src="./images/services/facility-4.jpg" alt="Football Arena">
+                        <div class="masonry-overlay">
+                            <h3>5-a-Side Arena</h3>
+                            <p>Football Pitch</p>
+                        </div>
+                    </div>
+
+                    <!-- Games Arena -->
+                    <div class="masonry-item" data-category="games">
+                        <img src="./images/gallery/gallery-3.jpg" alt="Gaming Zone">
+                        <div class="masonry-overlay">
+                            <h3>VR Gaming Experience</h3>
+                            <p>Games</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item masonry-wide" data-category="games">
+                        <img src="./images/services/facility-3.jpg" alt="Game Consoles">
+                        <div class="masonry-overlay">
+                            <h3>PS5 & Entertainment</h3>
+                            <p>Games</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item" data-category="games">
+                        <img src="./images/services/facility-5.jpg" alt="Recreation Area">
+                        <div class="masonry-overlay">
+                            <h3>Billiards & More</h3>
+                            <p>Games</p>
+                        </div>
+                    </div>
+
+                    <!-- Restaurant -->
+                    <div class="masonry-item" data-category="restaurant">
+                        <img src="./images/services/facility-6.jpg" alt="ZoneBite Restaurant">
+                        <div class="masonry-overlay">
+                            <h3>ZoneBite Restaurant</h3>
+                            <p>Restaurant</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item masonry-wide" data-category="restaurant">
+                        <img src="./images/gallery/gallery-2.jpg" alt="Dining Area">
+                        <div class="masonry-overlay">
+                            <h3>Healthy Dining Options</h3>
+                            <p>Restaurant</p>
+                        </div>
+                    </div>
+
+                    <!-- Events -->
+                    <div class="masonry-item masonry-tall" data-category="events">
+                        <img src="./images/gallery/gallery-5.jpg" alt="Event Space">
+                        <div class="masonry-overlay">
+                            <h3>Community Events</h3>
+                            <p>Events</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item" data-category="events">
+                        <img src="./images/hero/hero-gym-2.jpg" alt="Fitness Event">
+                        <div class="masonry-overlay">
+                            <h3>Fitness Workshops</h3>
+                            <p>Events</p>
+                        </div>
+                    </div>
+
+                    <div class="masonry-item" data-category="events">
+                        <img src="./images/hero/hero-gym-4.jpg" alt="Group Activity">
+                        <div class="masonry-overlay">
+                            <h3>Group Classes</h3>
+                            <p>Events</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lightbox Modal -->
+        <div class="lightbox" id="lightbox">
+            <button class="lightbox-close" aria-label="Close lightbox">&times;</button>
+            <button class="lightbox-prev" aria-label="Previous image">&#8249;</button>
+            <button class="lightbox-next" aria-label="Next image">&#8250;</button>
+            <div class="lightbox-content">
+                <img src="" alt="" id="lightboxImage">
+                <div class="lightbox-caption">
+                    <h3 id="lightboxTitle"></h3>
+                    <p id="lightboxCategory"></p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <h3>Active Zone Hub</h3>
+                        <p>Elevating lifestyles through fitness, beauty, and recreation.</p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="services.html">Services</a></li>
+                            <li><a href="store.html">Store</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-contact">
+                        <h4>Contact Us</h4>
+                        <p>29 Hainat Augusto Avenue<br>Orile-Agege, Lagos</p>
+                        <p>support@activezone.ng</p>
+                        <p>+234 803 042 8467</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Active Zone Hub. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+    <script src="./src/main.js"></script>
+    <script src="./src/gallery.js"></script>
+</body>
+
+</html>

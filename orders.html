@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management - Active Zone Hub</title>
+    <link rel="icon" type="image/png" href="./images/azh-favicon.png" />
+    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.1.4/otpauth.umd.min.js"></script>
+    <style>
+        .orders-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-bottom: 2px solid #e53935;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .page-header h1 {
+            color: #1a1a1a;
+            font-size: 28px;
+            margin: 0;
+        }
+
+        .page-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            position: relative;
+            z-index: 100;
+            pointer-events: auto;
+        }
+
+        .btn-refresh {
+            background: #d4af37;
+            color: #1a1a1a;
+        }
+
+        .btn-refresh:hover {
+            background: #c09b2d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-logout {
+            background: #666;
+        }
+
+        .btn-logout:hover {
+            background: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .stat-value {
+            color: #e53935;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .orders-table {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #1a1a1a;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .search-box {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            width: 300px;
+        }
+
+        .filter-select {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .filter-select:focus {
+            outline: 2px solid #d4af37;
+        }
+
+        .orders-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .order-card {
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+            transition: background 0.3s;
+        }
+
+        .order-card:hover {
+            background: #f9f9f9;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-id {
+            font-weight: bold;
+            color: #e53935;
+            font-size: 16px;
+        }
+
+        .order-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-paid {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-pending {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-processing {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-shipped {
+            background: #2196f3;
+            color: white;
+        }
+
+        .status-delivered {
+            background: #4caf50;
+            color: white;
+        }
+
+        .tab-btn.active {
+            color: #e53935 !important;
+            border-bottom: 3px solid #e53935 !important;
+        }
+
+        .tab-btn:hover {
+            color: #e53935;
+            background: rgba(229, 57, 53, 0.05);
+        }
+
+        .order-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .detail-section {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .detail-section h4 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #e53935;
+            padding-bottom: 5px;
+        }
+
+        .detail-section p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .detail-section strong {
+            color: #1a1a1a;
+        }
+
+        .items-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .items-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .items-list li:last-child {
+            border-bottom: none;
+        }
+
+        .order-total {
+            background: #1a1a1a;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .order-total .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e53935;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .order-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>Active Zone Hub</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="store.html">Store</a>
+                <a href="orders.html" class="active">Orders</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Orders Container -->
+    <div class="orders-container">
+        <div class="page-header">
+            <h1><i class="fas fa-clipboard-list"></i> Order Management</h1>
+            <div class="page-header-actions">
+                <button onclick="location.reload()" class="btn-action btn-refresh">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button onclick="logout()" class="btn-action btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="tabs-container" style="background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+            <div class="tabs" style="display: flex; border-bottom: 2px solid #eee;">
+                <button class="tab-btn active" onclick="switchTab('orders')" style="flex: 1; padding: 15px; border: none; background: transparent; font-size: 16px; font-weight: 600; cursor: pointer; color: #666; border-bottom: 3px solid transparent; transition: all 0.3s;">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </button>
+                <button class="tab-btn" onclick="switchTab('inventory')" style="flex: 1; padding: 15px; border: none; background: transparent; font-size: 16px; font-weight: 600; cursor: pointer; color: #666; border-bottom: 3px solid transparent; transition: all 0.3s;">
+                    <i class="fas fa-boxes"></i> Inventory
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div id="ordersTab" class="tab-content">
+        <div class="stats-cards">
+            <div class="stat-card">
+                <h3>Total Orders</h3>
+                <div class="stat-value" id="totalOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Revenue</h3>
+                <div class="stat-value">₦<span id="totalRevenue">0</span></div>
+            </div>
+            <div class="stat-card">
+                <h3>Delivery Orders</h3>
+                <div class="stat-value" id="deliveryOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Pickup Orders</h3>
+                <div class="stat-value" id="pickupOrders">0</div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="orders-table">
+            <div class="table-header">
+                <h2>Orders (<span id="filteredCount">0</span>)</h2>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <select id="statusFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                    </select>
+                    <select id="dateFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                    <input type="text" id="searchBox" class="search-box" placeholder="Search by Order ID, Customer..." oninput="applyFilters()">
+                    <button onclick="exportToCSV()" class="btn-action" style="background: #4caf50; padding: 8px 16px;">
+                        <i class="fas fa-download"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+            <div class="orders-list" id="ordersList">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading orders...
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="inventoryTab" class="tab-content" style="display: none;">
+            <!-- Inventory Stats -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <h3>Total Products</h3>
+                    <div class="stat-value" id="totalProducts">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Low Stock Items</h3>
+                    <div class="stat-value" style="color: #ff9800;" id="lowStockCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Products Displayed</h3>
+                    <div class="stat-value" style="color: #4caf50;" id="displayedProducts">0</div>
+                </div>
+            </div>
+
+            <!-- Inventory Table -->
+            <div class="orders-table">
+                <div class="table-header">
+                    <h2>Inventory (<span id="inventoryCount">0</span>)</h2>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <select id="stockFilter" class="filter-select" onchange="applyInventoryFilters()">
+                            <option value="all">All Stock Levels</option>
+                            <option value="low">Low Stock (≤2)</option>
+                            <option value="medium">Medium Stock (3-10)</option>
+                            <option value="high">High Stock (>10)</option>
+                        </select>
+                        <input type="text" id="inventorySearchBox" class="search-box" placeholder="Search by product name..." oninput="applyInventoryFilters()">
+                    </div>
+                </div>
+                <div class="orders-list" id="inventoryList" style="max-height: 600px; overflow-y: auto;">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading inventory...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        let allOrders = [];
+
+        // Simple password authentication for orders page
+        const ORDERS_PASSWORD = 'ActiveZone2026'; // Change this to your preferred password
+
+        // Simple authentication
+        function checkAuth() {
+            const isAuthenticated = sessionStorage.getItem('ordersAuth');
+            if (!isAuthenticated) {
+                showLoginForm();
+                return false;
+            }
+            return true;
+        }
+
+        function showLoginForm() {
+            document.querySelector('.orders-container').innerHTML = `
+                <div style="max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h2 style="text-align: center; margin-bottom: 30px; color: #1a1a1a;">
+                        <i class="fas fa-lock"></i> Admin Access
+                    </h2>
+                    <p style="text-align: center; color: #666; margin-bottom: 30px;">
+                        Enter admin password to access orders
+                    </p>
+                    <form id="loginForm" onsubmit="return handleLogin(event);">
+                        <div style="margin-bottom: 20px;">
+                            <input type="password" id="adminPassword" required
+                                autofocus
+                                style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 4px; font-size: 16px;" 
+                                placeholder="Enter password">
+                        </div>
+                        <div id="loginError" style="color: #e53935; margin-bottom: 15px; display: none; text-align: center;"></div>
+                        <button type="submit" class="btn-primary" 
+                            style="width: 100%; padding: 12px; background: #e53935; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </form>
+                    <p style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+                        <i class="fas fa-info-circle"></i> Default password: ActiveZone2026
+                    </p>
+                </div>
+            `;
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            
+            if (password === ORDERS_PASSWORD) {
+                sessionStorage.setItem('ordersAuth', 'true');
+                location.reload();
+                return false;
+            } else {
+                const errorDiv = document.getElementById('loginError');
+                errorDiv.textContent = 'Incorrect password';
+                errorDiv.style.display = 'block';
+                document.getElementById('adminPassword').value = '';
+                return false;
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('ordersAuth');
+            location.reload();
+        }
+
+        // Load orders from server
+        async function loadOrders() {
+            try {
+                const response = await fetch(API_BASE + '/orders');
+                const result = await response.json();
+                
+                if (result.success && result.orders) {
+                    allOrders = result.orders;
+                    displayOrders(allOrders);
+                    updateStats(allOrders);
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('ordersList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Failed to load orders</h3>
+                        <p>Make sure the backend server is running on port 3001</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayOrders(orders) {
+            const ordersList = document.getElementById('ordersList');
+            
+            // Update filtered count
+            document.getElementById('filteredCount').textContent = orders.length;
+            
+            if (orders.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            ordersList.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-id">${order.orderId}</div>
+                        <div class="order-status ${order.paymentStatus === 'paid' ? 'status-paid' : 'status-pending'}">
+                            ${order.paymentStatus === 'paid' ? '✓ Paid' : 'Pending'}
+                        </div>
+                    </div>
+                    <p style="color: #999; font-size: 12px; margin-bottom: 15px;">
+                        <i class="far fa-clock"></i> ${new Date(order.timestamp).toLocaleString()}
+                    </p>
+                    
+                    <div class="order-details">
+                        <!-- Customer Info -->
+                        <div class="detail-section">
+                            <h4><i class="fas fa-user"></i> Customer</h4>
+                            <p><strong>Name:</strong> ${order.customer.name}</p>
+                            <p><strong>Email:</strong> ${order.customer.email}</p>
+                            <p><strong>Phone:</strong> ${order.customer.phone || 'N/A'}</p>
+                            ${order.customer.memberId ? `<p><strong>Member ID:</strong> ${order.customer.memberId}</p>` : ''}
+                        </div>
+
+                        <!-- Delivery Info -->
+                        <div class="detail-section">
+                            <h4><i class="fas fa-shipping-fast"></i> Delivery</h4>
+                            <p><strong>Method:</strong> ${order.deliveryMethod === 'delivery' ? 'Home Delivery' : 'Pickup from Store'}</p>
+                            ${order.deliveryAddress ? `
+                                <p><strong>Address:</strong><br>
+                                ${order.deliveryAddress.street}<br>
+                                ${order.deliveryAddress.city}, ${order.deliveryAddress.state}
+                                ${order.deliveryAddress.postalCode ? ', ' + order.deliveryAddress.postalCode : ''}</p>
+                            ` : '<p>Pickup from store</p>'}
+                            <p><strong>Fee:</strong> ₦${formatNumber(order.deliveryFee)}</p>
+                        </div>
+
+                        <!-- Items -->
+                        <div class="detail-section">
+                            <h4><i class="fas fa-shopping-bag"></i> Items (${order.items.length})</h4>
+                            <ul class="items-list">
+                                ${order.items.map(item => `
+                                    <li>
+                                        <strong>${item.name}</strong><br>
+                                        Qty: ${item.quantity} × ₦${formatNumber(item.price)} = ₦${formatNumber(item.quantity * item.price)}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+
+                        <!-- Total -->
+                        <div class="order-total">
+                            <p style="margin: 0; font-size: 12px;">Total Amount</p>
+                            <div class="amount">₦${formatNumber(order.total)}</div>
+                            <p style="margin: 5px 0 0 0; font-size: 11px; color: #ccc;">
+                                Subtotal: ₦${formatNumber(order.subtotal)} + Delivery: ₦${formatNumber(order.deliveryFee)}
+                            </p>
+                        </div>
+                    </div>
+
+                    ${order.notes ? `
+                        <div class="detail-section" style="margin-top: 15px;">
+                            <h4><i class="fas fa-sticky-note"></i> Notes</h4>
+                            <p>${order.notes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Delivery Status Control -->
+                    <div class="detail-section" style="margin-top: 15px; background: #fff3e0; border-left: 4px solid #ff9800;">
+                        <h4><i class="fas fa-truck"></i> Delivery Status</h4>
+                        <select onchange="updateOrderStatus('${order.orderId}', this.value)" 
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                            <option value="pending" ${(order.deliveryStatus || 'pending') === 'pending' ? 'selected' : ''}>⏳ Pending Payment</option>
+                            <option value="paid" ${(order.deliveryStatus || 'pending') === 'paid' ? 'selected' : ''}>💳 Payment Confirmed</option>
+                            <option value="processing" ${(order.deliveryStatus || 'pending') === 'processing' ? 'selected' : ''}>📦 Processing Order</option>
+                            <option value="shipped" ${(order.deliveryStatus || 'pending') === 'shipped' ? 'selected' : ''}>🚚 Shipped</option>
+                            <option value="delivered" ${(order.deliveryStatus || 'pending') === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
+                        </select>
+                        <p style="margin-top: 10px; font-size: 12px; color: #e65100;">
+                            <i class="fas fa-info-circle"></i> Customer can track using reference: <strong>${order.orderId}</strong>
+                        </p>
+                    </div>
+                    
+                    ${order.paymentStatus === 'pending' || order.deliveryStatus === 'pending' ? `
+                    <!-- Delete Button for Unpaid Orders -->
+                    <div class="detail-section" style="margin-top: 15px; background: #ffebee; border-left: 4px solid #e53935;">
+                        <button onclick="deleteOrder('${order.orderId}')" 
+                            style="width: 100%; padding: 12px; background: #e53935; color: white; border: none; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s;"
+                            onmouseover="this.style.background='#c62828'" 
+                            onmouseout="this.style.background='#e53935'">
+                            <i class="fas fa-trash"></i> Delete Unpaid Order
+                        </button>
+                        <p style="margin-top: 10px; font-size: 11px; color: #666; text-align: center;">
+                            <i class="fas fa-shield-alt"></i> Requires Google Authenticator verification
+                        </p>
+                    </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function updateStats(orders) {
+            const totalOrders = orders.length;
+            const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+            const deliveryOrders = orders.filter(order => order.deliveryMethod === 'delivery').length;
+            const pickupOrders = orders.filter(order => order.deliveryMethod === 'pickup').length;
+
+            document.getElementById('totalOrders').textContent = totalOrders;
+            document.getElementById('totalRevenue').textContent = formatNumber(totalRevenue);
+            document.getElementById('deliveryOrders').textContent = deliveryOrders;
+            document.getElementById('pickupOrders').textContent = pickupOrders;
+        }
+
+        function showEmptyState() {
+            document.getElementById('ordersList').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No orders yet</h3>
+                    <p>Orders will appear here once customers make purchases</p>
+                </div>
+            `;
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function cleanPrice(price) {
+            // Remove currency symbols and other non-numeric characters except decimal point
+            const numericPrice = typeof price === 'string' ? 
+                parseFloat(price.replace(/[^0-9.]/g, '')) : price;
+            return numericPrice || 0;
+        }
+
+        // Update order delivery status
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deliveryStatus: newStatus })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`Order ${orderId} status updated to: ${newStatus}`);
+                    
+                    // Show success notification
+                    const emailMsg = result.emailSent ? ' ✉️ Customer notified via email.' : '';
+                    showNotification(`✅ Status updated to ${newStatus}.${emailMsg}`, 'success');
+                    
+                    // Refresh orders to show updated status
+                    await loadOrders();
+                } else {
+                    showNotification('❌ Failed to update order status: ' + result.error, 'error');
+                    // Refresh to reset the dropdown
+                    await loadOrders();
+                }
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                showNotification('❌ Error updating order status. Please try again.', 'error');
+                await loadOrders();
+            }
+        }
+
+        // Show notification toast
+        function showNotification(message, type = 'success') {
+            // Remove existing notification if any
+            const existing = document.querySelector('.notification-toast');
+            if (existing) existing.remove();
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification-toast notification-${type}`;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0; margin-left: 10px;">×</button>
+                </div>
+            `;
+            
+            // Add styles
+            const style = document.createElement('style');
+            style.textContent = `
+                .notification-toast {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: 500;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease-out;
+                    max-width: 400px;
+                }
+                .notification-success {
+                    background: #4caf50;
+                }
+                .notification-error {
+                    background: #e53935;
+                }
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(400px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            
+            if (!document.querySelector('style[data-notification-style]')) {
+                style.setAttribute('data-notification-style', 'true');
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // Delete order with TOTP verification
+        async function deleteOrder(orderId) {
+            // Prompt for TOTP code
+            const totpCode = prompt('🔒 Google Authenticator Code Required\n\nEnter your 6-digit authentication code to delete this order:', '');
+            
+            if (!totpCode) {
+                return; // User cancelled
+            }
+            
+            if (!/^\d{6}$/.test(totpCode)) {
+                showNotification('❌ Invalid code format. Must be 6 digits.', 'error');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete order ${orderId}?\n\nThis action cannot be undone!`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/orders/${orderId}`, {
+                    method: 'DELETE',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-TOTP-Code': totpCode
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('✅ Order deleted successfully!', 'success');
+                    await loadOrders();
+                } else {
+                    showNotification('❌ ' + (result.error || 'Failed to delete order'), 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting order:', error);
+                showNotification('❌ Error deleting order. Please try again.', 'error');
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allOrders.filter(order => 
+                order.orderId.toLowerCase().includes(searchTerm) ||
+                order.customer.name.toLowerCase().includes(searchTerm) ||
+                order.customer.email.toLowerCase().includes(searchTerm)
+            );
+            displayOrders(filtered);
+        });
+
+        // Filter and Search Functions
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            let filtered = allOrders;
+
+            // Apply search filter
+            if (searchTerm) {
+                filtered = filtered.filter(order => 
+                    order.orderId.toLowerCase().includes(searchTerm) ||
+                    order.customer.name.toLowerCase().includes(searchTerm) ||
+                    order.customer.email.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Apply status filter
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(order => {
+                    const status = order.deliveryStatus || 'pending';
+                    return status === statusFilter;
+                });
+            }
+
+            // Apply date filter
+            if (dateFilter !== 'all') {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                filtered = filtered.filter(order => {
+                    const orderDate = new Date(order.timestamp);
+                    
+                    if (dateFilter === 'today') {
+                        return orderDate >= today;
+                    } else if (dateFilter === 'week') {
+                        const weekAgo = new Date(today);
+                        weekAgo.setDate(weekAgo.getDate() - 7);
+                        return orderDate >= weekAgo;
+                    } else if (dateFilter === 'month') {
+                        const monthAgo = new Date(today);
+                        monthAgo.setMonth(monthAgo.getMonth() - 1);
+                        return orderDate >= monthAgo;
+                    }
+                    return true;
+                });
+            }
+
+            // Update filtered count
+            document.getElementById('filteredCount').textContent = filtered.length;
+            
+            displayOrders(filtered);
+        }
+
+        // Export to CSV Function
+        function exportToCSV() {
+            if (allOrders.length === 0) {
+                alert('No orders to export');
+                return;
+            }
+
+            // Get filtered orders
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            let ordersToExport = allOrders;
+
+            // Apply same filters as display
+            if (searchTerm) {
+                ordersToExport = ordersToExport.filter(order => 
+                    order.orderId.toLowerCase().includes(searchTerm) ||
+                    order.customer.name.toLowerCase().includes(searchTerm) ||
+                    order.customer.email.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (statusFilter !== 'all') {
+                ordersToExport = ordersToExport.filter(order => {
+                    const status = order.deliveryStatus || 'pending';
+                    return status === statusFilter;
+                });
+            }
+
+            if (dateFilter !== 'all') {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                ordersToExport = ordersToExport.filter(order => {
+                    const orderDate = new Date(order.timestamp);
+                    
+                    if (dateFilter === 'today') {
+                        return orderDate >= today;
+                    } else if (dateFilter === 'week') {
+                        const weekAgo = new Date(today);
+                        weekAgo.setDate(weekAgo.getDate() - 7);
+                        return orderDate >= weekAgo;
+                    } else if (dateFilter === 'month') {
+                        const monthAgo = new Date(today);
+                        monthAgo.setMonth(monthAgo.getMonth() - 1);
+                        return orderDate >= monthAgo;
+                    }
+                    return true;
+                });
+            }
+
+            if (ordersToExport.length === 0) {
+                alert('No orders match the current filters');
+                return;
+            }
+
+            // Create CSV content
+            const headers = ['Order ID', 'Date', 'Customer Name', 'Email', 'Phone', 'Delivery Method', 'Status', 'Subtotal', 'Delivery Fee', 'Total', 'Items'];
+            const csvRows = [headers.join(',')];
+
+            ordersToExport.forEach(order => {
+                const items = order.items.map(item => `${item.name} (${item.quantity})`).join('; ');
+                const row = [
+                    order.orderId,
+                    new Date(order.timestamp).toLocaleDateString(),
+                    `"${order.customer.name}"`,
+                    order.customer.email,
+                    order.customer.phone || 'N/A',
+                    order.deliveryMethod,
+                    order.deliveryStatus || 'pending',
+                    order.subtotal,
+                    order.deliveryFee,
+                    order.total,
+                    `"${items}"`
+                ];
+                csvRows.push(row.join(','));
+            });
+
+            // Create and download file
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            console.log(`✅ Exported ${ordersToExport.length} orders to CSV`);
+        }
+
+        // Load orders on page load
+        if (checkAuth()) {
+            loadOrders();
+            loadInventory();
+            // Auto-refresh every 30 seconds
+            setInterval(loadOrders, 30000);
+            setInterval(loadInventory, 60000); // Refresh inventory every minute
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.color = '#666';
+                btn.style.borderBottom = '3px solid transparent';
+            });
+            
+            // Find the clicked button by looking at the event target
+            const clickedBtn = event.target;
+            clickedBtn.classList.add('active');
+            clickedBtn.style.color = '#e53935';
+            clickedBtn.style.borderBottom = '3px solid #e53935';
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+        }
+
+        // Inventory Management
+        let allProducts = [];
+        let filteredProducts = [];
+
+        async function loadInventory() {
+            try {
+                const response = await fetch(`${API_BASE}/products`);
+                const result = await response.json();
+                
+                if (result.success && result.products) {
+                    allProducts = result.products;
+                    filteredProducts = allProducts;
+                    renderInventory();
+                    updateInventoryStats();
+                }
+            } catch (error) {
+                console.error('Error loading inventory:', error);
+                document.getElementById('inventoryList').innerHTML = '<p style="text-align: center; padding: 40px; color: #ff6b6b;">Failed to load inventory</p>';
+            }
+        }
+
+        function renderInventory() {
+            const inventoryList = document.getElementById('inventoryList');
+            
+            if (filteredProducts.length === 0) {
+                inventoryList.innerHTML = '<p style="text-align: center; padding: 40px; color: #666;">No products found</p>';
+                return;
+            }
+            
+            let html = '';
+            filteredProducts.forEach(product => {
+                const stock = product.maxquantity || 0;
+                let stockClass = 'status-paid';
+                let stockText = 'In Stock';
+                
+                if (stock === 0) {
+                    stockClass = 'status-pending';
+                    stockText = 'Out of Stock';
+                } else if (stock <= 2) {
+                    stockClass = 'status-processing';
+                    stockText = `Low Stock (${stock})`;
+                } else {
+                    stockText = `${stock} available`;
+                }
+                
+                html += `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <div class="order-id">${product.name}</div>
+                                <div style="color: #666; font-size: 14px; margin-top: 5px;">Product ID: ${product.productid || product.id}</div>
+                            </div>
+                            <div class="order-status ${stockClass}">${stockText}</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                            <div>
+                                <div style="color: #666; font-size: 12px;">Price</div>
+                                <div style="color: #1a1a1a; font-weight: 600; font-size: 16px;">₦${formatNumber(cleanPrice(product.price || 0))}</div>
+                            </div>
+                            <div>
+                                <div style="color: #666; font-size: 12px;">Stock Level</div>
+                                <div style="color: #e53935; font-weight: 600; font-size: 16px;">${stock}</div>
+                            </div>
+                            <div>
+                                <div style="color: #666; font-size: 12px;">Category</div>
+                                <div style="color: #1a1a1a; font-weight: 600;">${product.producttype || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            inventoryList.innerHTML = html;
+            document.getElementById('inventoryCount').textContent = filteredProducts.length;
+        }
+
+        function updateInventoryStats() {
+            const totalProducts = allProducts.length;
+            const lowStockCount = allProducts.filter(p => (p.maxquantity || 0) > 0 && (p.maxquantity || 0) <= 2).length;
+            const displayedCount = allProducts.filter(p => (p.maxquantity || 0) > 0).length;
+            
+            document.getElementById('totalProducts').textContent = totalProducts;
+            document.getElementById('lowStockCount').textContent = lowStockCount;
+            document.getElementById('displayedProducts').textContent = displayedCount;
+        }
+
+        function applyInventoryFilters() {
+            const searchTerm = document.getElementById('inventorySearchBox').value.toLowerCase();
+            const stockFilter = document.getElementById('stockFilter').value;
+            
+            filteredProducts = allProducts.filter(product => {
+                // Search filter
+                const matchesSearch = product.name.toLowerCase().includes(searchTerm);
+                
+                // Stock filter
+                const stock = product.maxquantity || 0;
+                let matchesStock = true;
+                
+                if (stockFilter === 'low') {
+                    matchesStock = stock > 0 && stock <= 2;
+                } else if (stockFilter === 'medium') {
+                    matchesStock = stock >= 3 && stock <= 10;
+                } else if (stockFilter === 'high') {
+                    matchesStock = stock > 10;
+                }
+                
+                return matchesSearch && matchesStock;
+            });
+            
+            renderInventory();
+        }
+    </script>
+</body>
+</html>

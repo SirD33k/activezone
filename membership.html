@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="./images/azh-favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Membership | Active Zone Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="container">
+                <a href="index.html" class="logo">
+                    <img src="./images/azh-white-logo.png" alt="Active Zone Hub" class="logo-img">
+                    <span class="logo-text">Active Zone Hub</span>
+                </a>
+                <button class="menu-toggle" aria-label="Toggle navigation">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="store.html">RDX Store</a></li>
+                    <li><a href="membership.html">Membership</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="membership.html" class="btn-primary">Join Now</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <header class="page-header" style="background-image: url('./images/hero/hero-membership.jpg')">
+            <h1>Membership <span class="text-gold">Plans</span></h1>
+        </header>
+
+        <section class="membership-section">
+            <div class="container">
+                <h2>Choose Your <span class="text-gold">Membership Plan</span></h2>
+                <p class="section-subtitle">Flexible plans designed to fit your lifestyle and fitness goals</p>
+
+                <!-- Plan Tabs -->
+                <div class="plan-tabs">
+                    <button class="tab-btn active" data-tab="individual">Individual Plans</button>
+                    <button class="tab-btn" data-tab="couples">Couples Plans</button>
+                </div>
+
+                <!-- Individual Plans -->
+                <div id="individual-plans" class="plans-container active">
+                    <div class="plans-grid">
+                        <!-- Monthly Plan -->
+                        <div class="plan-card">
+                            <div class="plan-header">
+                                <h3>Monthly</h3>
+                                <div class="plan-price">₦28,750<span>/month</span></div>
+                                <p class="plan-period">Billed Monthly</p>
+                            </div>
+                            <ul class="plan-features">
+                                <li>✓ Gym Access</li>
+                                <li>✓ Locker Room Access</li>
+                                <li>✗ Trainer Assistance</li>
+                                <li>✗ Discounts on Salon</li>
+                                <li>✗ Discounts on RDX Products</li>
+                            </ul>
+                            <a href="https://activezone.gymmasteronline.com/portal/signup/details/3e385ace21d932ff41893e9b83fbdbcc?companyid=2&company_group=None" class="btn-subscribe" target="_blank">Subscribe Now</a>
+                        </div>
+
+                        <!-- Quarterly Plan -->
+                        <div class="plan-card">
+                            <div class="plan-header">
+                                <h3>Quarterly</h3>
+                                <div class="plan-price">₦69,000<span>/3 months</span></div>
+                                <p class="plan-period">Billed Every 3 Months</p>
+                            </div>
+                            <ul class="plan-features">
+                                <li>✓ Gym Access</li>
+                                <li>✓ Locker Room Access</li>
+                                <li>✓ Trainer Assistance (2 sessions/month)</li>
+                                <li>✓ Discounts on Salon (10%)</li>
+                                <li>✗ Discounts on RDX Products</li>
+                            </ul>
+                            <a href="https://activezone.gymmasteronline.com/portal/signup/details/1a73b4a06b47bc90b04b4674824c7a3f?companyid=2&company_group=None" class="btn-subscribe" target="_blank">Subscribe Now</a>
+                        </div>
+
+                        <!-- Bi-Annual Plan (New) -->
+                        <div class="plan-card featured">
+                            <div class="plan-badge">Best Value</div>
+                            <div class="plan-header">
+                                <h3>Bi-Annual</h3>
+                                <div class="plan-price">₦115,000<span>/6 months</span></div>
+                                <p class="plan-period">Billed Every 6 Months</p>
+                            </div>
+                            <ul class="plan-features">
+                                <li>✓ Gym Access</li>
+                                <li>✓ Locker Room Access</li>
+                                <li>✓ Trainer Assistance (3 sessions/month)</li>
+                                <li>✓ Discounts on Salon (15%)</li>
+                                <li>✓ Discounts on RDX Products (5%)</li>
+                            </ul>
+                            <a href="https://activezone.gymmasteronline.com/portal/signup/details/d74a80609986b7d217a030211fea5666?companyid=2&company_group=None" class="btn-subscribe" target="_blank">Subscribe Now</a>
+                        </div>
+
+                        <!-- Annual Plan VIP -->
+                        <div class="plan-card vip">
+                            <div class="plan-badge">VIP</div>
+                            <div class="plan-header">
+                                <h3>Annual</h3>
+                                <div class="plan-price">₦230,000<span>/year</span></div>
+                                <p class="plan-period">Billed Annually • Save 20%</p>
+                            </div>
+                            <ul class="plan-features">
+                                <li>✓ Gym Access</li>
+                                <li>✓ Locker Room Access</li>
+                                <li>✓ Trainer Assistance (4 sessions/month)</li>
+                                <li>✓ Discounts on Salon (20%)</li>
+                                <li>✓ Discounts on RDX Products (15%)</li>
+                            </ul>
+                            <a href="https://activezone.gymmasteronline.com/portal/signup/details/9437e802340d0597e9016c9b79c768f7?companyid=2&company_group=None" class="btn-subscribe" target="_blank">Subscribe Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Couples Plans -->
+                <div id="couples-plans" class="plans-container">
+                    <div class="plans-grid">
+                        <!-- Monthly Plan -->
+                        <div class="plan-card">
+                            <div class="plan-header">
+                                <h3>Monthly</h3>
+                                <div class="plan-price">₦46,000<span>/month</span></div>
+                                <p class="plan-period">Billed Monthly • For 2 People</p>
+                            </div>
+                            <ul class="plan-features">
+                                <li>✓ Gym Access (2 People)</li>
+                                <li>✓ Locker Room Access</li>
+                                <li>✗ Trainer Assistance</li>
+                                <li>✗ Discounts on Salon</li>
+                                <li>✗ Discounts on RDX Products</li>
+                            </ul>
+                            <a href="https://activezone.gymmasteronline.com/portal/signup/details/252cdd287ba7d0908179cfc7314daffe?companyid=2" class="btn-subscribe" target="_blank">Subscribe Now</a>
+                        </div>
+
+                        <!-- Quarterly Plan -->
+                        <div class="plan-card">
+                            <div class="plan-header">
+                                <h3>Quarterly</h3>
+                                <div class="plan-price">₦115,000<span>/3 months</span></div>
+                                <p class="plan-period">Billed Every 3 Months • For 2 People</p>
+                            </div>
+                            <ul class="plan-features">
+                                <li>✓ Gym Access (2 People)</li>
+                                <li>✓ Locker Room Access</li>
+                                <li>✓ Trainer Assistance (2 sessions/month)</li>
+                                <li>✓ Discounts on Salon (10%)</li>
+                                <li>✗ Discounts on RDX Products</li>
+                            </ul>
+                            <a href="https://activezone.gymmasteronline.com/portal/signup/details/844f4a98c676ec0f8b8c6b7f6ce04ba7?companyid=2" class="btn-subscribe" target="_blank">Subscribe Now</a>
+                        </div>
+
+                        <!-- Bi-Annual Plan -->
+                        <div class="plan-card featured">
+                            <div class="plan-badge">Best Value</div>
+                            <div class="plan-header">
+                                <h3>Bi-Annual</h3>
+                                <div class="plan-price">₦207,000<span>/6 months</span></div>
+                                <p class="plan-period">Billed Every 6 Months • For 2 People</p>
+                            </div>
+                            <ul class="plan-features">
+                                <li>✓ Gym Access (2 People)</li>
+                                <li>✓ Locker Room Access</li>
+                                <li>✓ Trainer Assistance (3 sessions/month)</li>
+                                <li>✓ Discounts on Salon (15%)</li>
+                                <li>✓ Discounts on RDX Products (5%)</li>
+                            </ul>
+                            <a href="https://activezone.gymmasteronline.com/portal/signup/details/b800879ad154de02f795f985979c6266?companyid=2" class="btn-subscribe" target="_blank">Subscribe Now</a>
+                        </div>
+
+                        <!-- Annual Plan VIP -->
+                        <div class="plan-card vip">
+                            <div class="plan-badge">VIP</div>
+                            <div class="plan-header">
+                                <h3>Annual</h3>
+                                <div class="plan-price">₦414,000<span>/year</span></div>
+                                <p class="plan-period">Billed Annually • For 2 People</p>
+                            </div>
+                            <ul class="plan-features">
+                                <li>✓ Gym Access (2 People)</li>
+                                <li>✓ Locker Room Access</li>
+                                <li>✓ Trainer Assistance (4 sessions/month)</li>
+                                <li>✓ Discounts on Salon (20%)</li>
+                                <li>✓ Discounts on RDX Products (15%)</li>
+                            </ul>
+                            <a href="https://activezone.gymmasteronline.com/portal/signup/details/0c5097a10391868581ce92b5fa6e7916?companyid=2" class="btn-subscribe" target="_blank">Subscribe Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <h3>Active Zone Hub</h3>
+                        <p>Elevating lifestyles through fitness, beauty, and recreation.</p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="services.html">Services</a></li>
+                            <li><a href="store.html">Store</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-contact">
+                        <h4>Contact Us</h4>
+                        <p>29 Hainat Augusto Avenue<br>Orile-Agege, Lagos</p>
+                        <p>support@activezone.ng</p>
+                        <p>+234 803 042 8467</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Active Zone Hub. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+    <script src="./src/main.js"></script>
+</body>
+
+</html>

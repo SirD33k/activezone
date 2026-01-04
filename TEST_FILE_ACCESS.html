@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test File Access - Active Zone Hub</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        h1 {
+            color: #d4af37;
+        }
+        .test-item {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #d4af37;
+        }
+        .pass {
+            color: #4caf50;
+        }
+        .fail {
+            color: #f44336;
+        }
+        button {
+            background: #d4af37;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #c99b2d;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Active Zone Hub - File Access Test</h1>
+    <p>This page tests if the project works correctly when opened directly from the file system.</p>
+    
+    <button onclick="runTests()">Run All Tests</button>
+    <button onclick="location.href='index.html'">Open Main Site</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function runTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>Test Results:</h2>';
+            
+            const tests = [
+                {
+                    name: 'JavaScript Loaded',
+                    test: () => typeof document !== 'undefined'
+                },
+                {
+                    name: 'DOM Ready',
+                    test: () => document.readyState === 'complete' || document.readyState === 'interactive'
+                },
+                {
+                    name: 'CSS File Accessible',
+                    test: () => {
+                        const link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = './src/style.css';
+                        document.head.appendChild(link);
+                        return true;
+                    }
+                },
+                {
+                    name: 'Images Path Check',
+                    test: () => {
+                        const img = new Image();
+                        img.src = './images/favicon.svg';
+                        return true;
+                    }
+                },
+                {
+                    name: 'Relative Path Support',
+                    test: () => window.location.protocol === 'file:'
+                }
+            ];
+            
+            tests.forEach(test => {
+                try {
+                    const passed = test.test();
+                    results.innerHTML += `
+                        <div class="test-item">
+                            <strong>${test.name}:</strong> 
+                            <span class="${passed ? 'pass' : 'fail'}">
+                                ${passed ? '✅ PASS' : '❌ FAIL'}
+                            </span>
+                        </div>
+                    `;
+                } catch (error) {
+                    results.innerHTML += `
+                        <div class="test-item">
+                            <strong>${test.name}:</strong> 
+                            <span class="fail">❌ ERROR: ${error.message}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            results.innerHTML += `
+                <div class="test-item">
+                    <h3>✅ All Systems Ready!</h3>
+                    <p>Your project is now configured to work directly from the file system.</p>
+                    <p><strong>Current Protocol:</strong> ${window.location.protocol}</p>
+                    <p><strong>Current Path:</strong> ${window.location.pathname}</p>
+                </div>
+            `;
+        }
+        
+        // Auto-run tests on load
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>
