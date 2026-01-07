@@ -1722,12 +1722,12 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start server
-app.listen(PORT, () => {
+// Start server - bind to 0.0.0.0 for Railway/Render compatibility
+app.listen(PORT, '0.0.0.0', () => {
     console.log('='.repeat(50));
     console.log('Active Zone Hub - Backend Server');
     console.log('='.repeat(50));
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
     console.log('API Endpoints:');
     console.log(`  GET  /api/health    - Health check`);
     console.log(`  POST /api/login     - Member login`);
