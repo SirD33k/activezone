@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
-const { Resend } = require('resend');
+const brevo = require('@getbrevo/brevo');
 require('dotenv').config();
 
 const app = express();
@@ -1014,33 +1014,34 @@ app.delete('/api/orders/:orderId', (req, res) => {
     }
 });
 
-// Configure email service using Resend HTTP API (not SMTP)
-let resendClient = null;
+// Configure email service using Brevo HTTP API (not SMTP)
+let brevoClient = null;
 let emailService = 'none';
 
 console.log('\n' + '='.repeat(60));
 console.log('EMAIL SERVICE INITIALIZATION');
 console.log('='.repeat(60));
 
-// Use Resend API (works on Render - uses HTTPS port 443)
-if (process.env.RESEND_API_KEY) {
+// Use Brevo API (works on Render - uses HTTPS port 443)
+if (process.env.BREVO_API_KEY) {
     try {
-        console.log('Initializing Resend email service (HTTP API)...');
-        resendClient = new Resend(process.env.RESEND_API_KEY);
-        emailService = 'resend';
-        console.log('✅ Resend email service initialized');
+        console.log('Initializing Brevo email service (HTTP API)...');
+        const apiInstance = new brevo.TransactionalEmailsApi();
+        apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+        brevoClient = apiInstance;
+        emailService = 'brevo';
+        console.log('✅ Brevo email service initialized');
         console.log(`   From: ${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`);
         console.log('   Using HTTPS API (port 443) - compatible with Render');
     } catch (error) {
-        console.error('❌ Resend initialization error:', error.message);
-        resendClient = null;
+        console.error('❌ Brevo initialization error:', error.message);
+        brevoClient = null;
         emailService = 'none';
     }
 }
 else {
-    console.log('⚠️  No RESEND_API_KEY found');
-    console.log('   Please add RESEND_API_KEY to environment variables');
-    console.log('   Get your key at: https://resend.com/api-keys');
+    console.log('⚠️  No BREVO_API_KEY found');
+    console.log('   Please add BREVO_API_KEY to environment variables');
     emailService = 'none';
 }
 
@@ -1203,34 +1204,43 @@ Active Zone Hub Team
         console.log(`Order: ${orderDetails.orderId}`);
         console.log('='.repeat(60));
         
-        // Send email using Resend HTTP API
-        if (resendClient) {
-            console.log('Calling Resend API...');
-            const result = await resendClient.emails.send({
-                from: `${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`,
-                to: customerEmail,
-                subject: `Order Confirmation - ${orderDetails.orderId}`,
-                html: emailHTML,
-                text: emailText
-            });
+        // Send email using Brevo HTTP API
+        if (brevoClient) {
+            console.log('Calling Brevo API...');
             
-            console.log('Resend API response:', JSON.stringify(result, null, 2));
-            
-            if (result.error) {
-                console.log('❌ Resend API error:', result.error);
-                console.log('='.repeat(60) + '\n');
-                return { success: false, error: result.error.message || 'Email sending failed' };
-            }
-            
-            console.log('✅ Email sent successfully via Resend API!');
-            console.log(`   Email ID: ${result.data?.id || result.id || 'unknown'}`);
-            console.log('='.repeat(60) + '\n');
-            
-            return { 
-                success: true, 
-                message: 'Order confirmation email sent successfully',
-                messageId: result.data?.id || result.id
+            const sendSmtpEmail = new brevo.SendSmtpEmail();
+            sendSmtpEmail.sender = {
+                name: process.env.SMTP_FROM_NAME || 'Active Zone Hub',
+                email: process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'
             };
+            sendSmtpEmail.to = [{ email: customerEmail }];
+            sendSmtpEmail.subject = `Order Confirmation - ${orderDetails.orderId}`;
+            sendSmtpEmail.htmlContent = emailHTML;
+            sendSmtpEmail.textContent = emailText;
+            
+            const result = await brevoClient.sendTransacEmail(sendSmtpEmail);
+            
+            console.log('Brevo API response:', JSON.stringify(result, null, 2));
+            
+            if (result.body && result.body.messageId) {
+                console.log('✅ Email sent successfully via Brevo API!');
+                console.log(`   Message ID: ${result.body.messageId}`);
+                console.log('='.repeat(60) + '\n');
+                
+                return { 
+                    success: true, 
+                    message: 'Order confirmation email sent successfully',
+                    messageId: result.body.messageId
+                };
+            } else if (result.response && result.response.body) {
+                console.log('❌ Brevo API error:', result.response.body);
+                console.log('='.repeat(60) + '\n');
+                return { success: false, error: result.response.body.message || 'Email sending failed' };
+            } else {
+                console.log('✅ Email sent (no message ID returned)');
+                console.log('='.repeat(60) + '\n');
+                return { success: true, message: 'Email sent' };
+            }
         } else {
             console.log('⚠️  No email service configured. Email not sent.');
             console.log('='.repeat(60) + '\n');
@@ -1435,34 +1445,43 @@ Active Zone Hub Team
         console.log(`New Status: ${newStatus}`);
         console.log('='.repeat(60));
         
-        // Send email using Resend HTTP API
-        if (resendClient) {
-            console.log('Calling Resend API...');
-            const result = await resendClient.emails.send({
-                from: `${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`,
-                to: customerEmail,
-                subject: `${content.title} - ${orderDetails.orderId}`,
-                html: emailHTML,
-                text: emailText
-            });
+        // Send email using Brevo HTTP API
+        if (brevoClient) {
+            console.log('Calling Brevo API...');
             
-            console.log('Resend API response:', JSON.stringify(result, null, 2));
-            
-            if (result.error) {
-                console.log('❌ Resend API error:', result.error);
-                console.log('='.repeat(60) + '\n');
-                return { success: false, error: result.error.message || 'Email sending failed' };
-            }
-            
-            console.log('✅ Status update email sent successfully via Resend API!');
-            console.log(`   Email ID: ${result.data?.id || result.id || 'unknown'}`);
-            console.log('='.repeat(60) + '\n');
-            
-            return { 
-                success: true, 
-                message: 'Status update email sent successfully',
-                messageId: result.data?.id || result.id
+            const sendSmtpEmail = new brevo.SendSmtpEmail();
+            sendSmtpEmail.sender = {
+                name: process.env.SMTP_FROM_NAME || 'Active Zone Hub',
+                email: process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'
             };
+            sendSmtpEmail.to = [{ email: customerEmail }];
+            sendSmtpEmail.subject = `${content.title} - ${orderDetails.orderId}`;
+            sendSmtpEmail.htmlContent = emailHTML;
+            sendSmtpEmail.textContent = emailText;
+            
+            const result = await brevoClient.sendTransacEmail(sendSmtpEmail);
+            
+            console.log('Brevo API response:', JSON.stringify(result, null, 2));
+            
+            if (result.body && result.body.messageId) {
+                console.log('✅ Status update email sent successfully via Brevo API!');
+                console.log(`   Message ID: ${result.body.messageId}`);
+                console.log('='.repeat(60) + '\n');
+                
+                return { 
+                    success: true, 
+                    message: 'Status update email sent successfully',
+                    messageId: result.body.messageId
+                };
+            } else if (result.response && result.response.body) {
+                console.log('❌ Brevo API error:', result.response.body);
+                console.log('='.repeat(60) + '\n');
+                return { success: false, error: result.response.body.message || 'Email sending failed' };
+            } else {
+                console.log('✅ Status update email sent (no message ID returned)');
+                console.log('='.repeat(60) + '\n');
+                return { success: true, message: 'Status update email sent' };
+            }
         } else {
             console.log('⚠️  No email service configured. Email not sent.');
             console.log('='.repeat(60) + '\n');
