@@ -1602,12 +1602,13 @@ app.post('/api/orders', async (req, res) => {
             
             try {
                 // Initialize Paystack transaction
+                const appBaseUrl = (process.env.APP_URL || 'http://localhost:3001').replace('/api', '');
                 const paystackData = {
                     email: customer.email,
                     amount: Math.round(total * 100), // Convert to kobo (Paystack expects amount in kobo)
                     currency: 'NGN',
                     reference: orderId,
-                    callback_url: `${process.env.APP_URL || 'http://localhost:3001'}/payment-success.html?reference=${orderId}`,
+                    callback_url: `${appBaseUrl}/payment-success.html?reference=${orderId}`,
                     metadata: {
                         orderId: orderId,
                         customer_name: customer.name,
