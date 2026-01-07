@@ -16,19 +16,16 @@ const PORT = process.env.PORT || 3001;
 const DATA_DIR = process.env.RENDER ? '/app/data' : __dirname;
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 
-// Ensure data directory exists (for Render persistent disk)
-if (process.env.RENDER && !fs.existsSync(DATA_DIR)) {
-    try {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-        console.log(`📁 Created data directory: ${DATA_DIR}`);
-    } catch (error) {
-        console.error('❌ Failed to create data directory:', error.message);
-    }
-}
-
 console.log(`💾 Orders will be stored in: ${ORDERS_FILE}`);
 if (process.env.RENDER) {
     console.log('🔒 Using Render persistent disk for order storage');
+    // Check if the data directory exists (it should be mounted by Render)
+    if (!fs.existsSync(DATA_DIR)) {
+        console.log('⚠️  Warning: /app/data directory not found. Persistent disk may not be mounted.');
+        console.log('   Please add a persistent disk in Render dashboard with mount path: /app/data');
+    } else {
+        console.log('✅ Persistent disk directory found');
+    }
 } else {
     console.log('📂 Using local file storage for order storage');
 }
