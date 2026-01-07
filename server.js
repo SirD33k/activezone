@@ -1187,6 +1187,7 @@ Active Zone Hub Team
         
         // Send email using Resend HTTP API
         if (resendClient) {
+            console.log('Calling Resend API...');
             const result = await resendClient.emails.send({
                 from: `${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`,
                 to: customerEmail,
@@ -1195,14 +1196,22 @@ Active Zone Hub Team
                 text: emailText
             });
             
+            console.log('Resend API response:', JSON.stringify(result, null, 2));
+            
+            if (result.error) {
+                console.log('❌ Resend API error:', result.error);
+                console.log('='.repeat(60) + '\n');
+                return { success: false, error: result.error.message || 'Email sending failed' };
+            }
+            
             console.log('✅ Email sent successfully via Resend API!');
-            console.log(`   Email ID: ${result.id}`);
+            console.log(`   Email ID: ${result.data?.id || result.id || 'unknown'}`);
             console.log('='.repeat(60) + '\n');
             
             return { 
                 success: true, 
                 message: 'Order confirmation email sent successfully',
-                messageId: result.id
+                messageId: result.data?.id || result.id
             };
         } else {
             console.log('⚠️  No email service configured. Email not sent.');
@@ -1410,6 +1419,7 @@ Active Zone Hub Team
         
         // Send email using Resend HTTP API
         if (resendClient) {
+            console.log('Calling Resend API...');
             const result = await resendClient.emails.send({
                 from: `${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`,
                 to: customerEmail,
@@ -1418,14 +1428,22 @@ Active Zone Hub Team
                 text: emailText
             });
             
+            console.log('Resend API response:', JSON.stringify(result, null, 2));
+            
+            if (result.error) {
+                console.log('❌ Resend API error:', result.error);
+                console.log('='.repeat(60) + '\n');
+                return { success: false, error: result.error.message || 'Email sending failed' };
+            }
+            
             console.log('✅ Status update email sent successfully via Resend API!');
-            console.log(`   Email ID: ${result.id}`);
+            console.log(`   Email ID: ${result.data?.id || result.id || 'unknown'}`);
             console.log('='.repeat(60) + '\n');
             
             return { 
                 success: true, 
                 message: 'Status update email sent successfully',
-                messageId: result.id
+                messageId: result.data?.id || result.id
             };
         } else {
             console.log('⚠️  No email service configured. Email not sent.');
