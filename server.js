@@ -996,11 +996,23 @@ app.delete('/api/orders/:orderId', (req, res) => {
     }
 });
 
-// Configure email transporter (SendGrid or SMTP)
+// Configure email transporter (Resend, SendGrid, or SMTP)
 let emailTransporter;
 
-if (process.env.SENDGRID_API_KEY) {
-    // Use SendGrid (recommended for cloud hosting like Render)
+if (process.env.RESEND_API_KEY) {
+    // Use Resend (recommended - easiest setup)
+    emailTransporter = nodemailer.createTransport({
+        host: 'smtp.resend.com',
+        port: 465,
+        secure: true,
+        auth: {
+            user: 'resend',
+            pass: process.env.RESEND_API_KEY
+        }
+    });
+    console.log('📧 Using Resend for email delivery');
+} else if (process.env.SENDGRID_API_KEY) {
+    // Use SendGrid
     emailTransporter = nodemailer.createTransport({
         host: 'smtp.sendgrid.net',
         port: 587,
@@ -1031,10 +1043,11 @@ if (process.env.SENDGRID_API_KEY) {
 // Verify email connection on startup
 emailTransporter.verify(function(error, success) {
     if (error) {
-        console.log('❌ SMTP Connection Error:', error.message);
-        console.log('⚠️  Email notifications will not work. Please check .env file.');
+        console.log('❌ Email Connection Error:', error.message);
+        console.log('⚠️  Email notifications will not work.');
+        console.log('   Please add RESEND_API_KEY or SENDGRID_API_KEY to environment variables.');
     } else {
-        console.log('✅ SMTP Server ready to send emails');
+        console.log('✅ Email service ready to send');
         console.log(`   From: ${process.env.SMTP_FROM_NAME} <${process.env.SMTP_FROM_EMAIL}>`);
     }
 });
