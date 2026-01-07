@@ -1001,24 +1001,42 @@ app.delete('/api/orders/:orderId', (req, res) => {
 let emailService = 'none';
 let brevoApiInstance = null;
 
+console.log('\n' + '='.repeat(60));
+console.log('EMAIL SERVICE INITIALIZATION');
+console.log('='.repeat(60));
+console.log('Checking for BREVO_API_KEY:', process.env.BREVO_API_KEY ? 'Found (✓)' : 'Not found (✗)');
+
 if (process.env.BREVO_API_KEY) {
     // Use Brevo API (works on Render - uses HTTPS, not SMTP)
     try {
+        console.log('Attempting to initialize Brevo API...');
         const apiInstance = new brevo.TransactionalEmailsApi();
+        console.log('Brevo TransactionalEmailsApi instance created');
+        
         apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+        console.log('Brevo API key set');
+        
         brevoApiInstance = apiInstance;
         emailService = 'brevo';
+        
         console.log('📧 Using Brevo API for email delivery');
         console.log('✅ Email service ready to send');
         console.log(`   From: ${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`);
+        console.log('='.repeat(60) + '\n');
     } catch (error) {
-        console.error('❌ Brevo API initialization error:', error.message);
+        console.error('❌ Brevo API initialization error:');
+        console.error('   Error message:', error.message);
+        console.error('   Error stack:', error.stack);
+        console.log('   Email service will be disabled.');
+        console.log('='.repeat(60) + '\n');
         emailService = 'none';
+        brevoApiInstance = null;
     }
 } else {
-    console.log('⚠️  No Brevo API key found.');
-    console.log('   Please add BREVO_API_KEY to environment variables.');
+    console.log('⚠️  No BREVO_API_KEY found in environment variables.');
     console.log('   Email notifications will not work.');
+    console.log('   Please add BREVO_API_KEY to Render environment settings.');
+    console.log('='.repeat(60) + '\n');
 }
 
 // Send order confirmation email with tracking link
