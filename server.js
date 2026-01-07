@@ -996,10 +996,22 @@ app.delete('/api/orders/:orderId', (req, res) => {
     }
 });
 
-// Configure email transporter (Resend, SendGrid, or SMTP)
+// Configure email transporter (Brevo, Resend, SendGrid, or SMTP)
 let emailTransporter;
 
-if (process.env.RESEND_API_KEY) {
+if (process.env.BREVO_API_KEY) {
+    // Use Brevo (formerly Sendinblue)
+    emailTransporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng',
+            pass: process.env.BREVO_API_KEY
+        }
+    });
+    console.log('📧 Using Brevo for email delivery');
+} else if (process.env.RESEND_API_KEY) {
     // Use Resend (recommended - easiest setup)
     emailTransporter = nodemailer.createTransport({
         host: 'smtp.resend.com',
@@ -1045,7 +1057,7 @@ emailTransporter.verify(function(error, success) {
     if (error) {
         console.log('❌ Email Connection Error:', error.message);
         console.log('⚠️  Email notifications will not work.');
-        console.log('   Please add RESEND_API_KEY or SENDGRID_API_KEY to environment variables.');
+        console.log('   Please add BREVO_API_KEY, RESEND_API_KEY, or SENDGRID_API_KEY to environment variables.');
     } else {
         console.log('✅ Email service ready to send');
         console.log(`   From: ${process.env.SMTP_FROM_NAME} <${process.env.SMTP_FROM_EMAIL}>`);
