@@ -7,7 +7,6 @@ const fs = require('fs');
 const nodemailer = require('nodemailer');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
-const brevo = require('@getbrevo/brevo');
 require('dotenv').config();
 
 const app = express();
@@ -997,45 +996,78 @@ app.delete('/api/orders/:orderId', (req, res) => {
     }
 });
 
-// Configure email service (Brevo API, Resend, SendGrid, or SMTP)
+// Configure email service using nodemailer with Resend SMTP
+let emailTransporter = null;
 let emailService = 'none';
-let brevoApiInstance = null;
 
 console.log('\n' + '='.repeat(60));
 console.log('EMAIL SERVICE INITIALIZATION');
 console.log('='.repeat(60));
-console.log('Checking for BREVO_API_KEY:', process.env.BREVO_API_KEY ? 'Found (✓)' : 'Not found (✗)');
 
-if (process.env.BREVO_API_KEY) {
-    // Use Brevo API (works on Render - uses HTTPS, not SMTP)
+// Try Resend first (works on Render, uses SMTP relay)
+if (process.env.RESEND_API_KEY) {
     try {
-        console.log('Attempting to initialize Brevo API...');
-        const apiInstance = new brevo.TransactionalEmailsApi();
-        console.log('Brevo TransactionalEmailsApi instance created');
-        
-        apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
-        console.log('Brevo API key set');
-        
-        brevoApiInstance = apiInstance;
-        emailService = 'brevo';
-        
-        console.log('📧 Using Brevo API for email delivery');
-        console.log('✅ Email service ready to send');
+        console.log('Initializing Resend email service...');
+        emailTransporter = nodemailer.createTransport({
+            host: 'smtp.resend.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: 'resend',
+                pass: process.env.RESEND_API_KEY
+            }
+        });
+        emailService = 'resend';
+        console.log('✅ Resend email service initialized');
         console.log(`   From: ${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`);
-        console.log('='.repeat(60) + '\n');
     } catch (error) {
-        console.error('❌ Brevo API initialization error:');
-        console.error('   Error message:', error.message);
-        console.error('   Error stack:', error.stack);
-        console.log('   Email service will be disabled.');
-        console.log('='.repeat(60) + '\n');
+        console.error('❌ Resend initialization error:', error.message);
+        emailTransporter = null;
         emailService = 'none';
-        brevoApiInstance = null;
     }
+}
+// Fallback to Brevo SMTP
+else if (process.env.BREVO_API_KEY) {
+    try {
+        console.log('Initializing Brevo email service...');
+        emailTransporter = nodemailer.createTransport({
+            host: 'smtp-relay.sendinblue.com',
+            port: 587,
+            secure: false,
+            auth: {
+                user: process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng',
+                pass: process.env.BREVO_API_KEY
+            }
+        });
+        emailService = 'brevo';
+        console.log('✅ Brevo email service initialized');
+        console.log(`   From: ${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`);
+    } catch (error) {
+        console.error('❌ Brevo initialization error:', error.message);
+        emailTransporter = null;
+        emailService = 'none';
+    }
+}
+else {
+    console.log('⚠️  No email API key found');
+    console.log('   Please add RESEND_API_KEY (recommended) or BREVO_API_KEY to environment');
+    emailService = 'none';
+}
+
+// Verify email connection
+if (emailTransporter) {
+    emailTransporter.verify(function(error, success) {
+        if (error) {
+            console.error('❌ Email connection test failed:', error.message);
+            console.log('⚠️  Email service will be disabled');
+            emailTransporter = null;
+            emailService = 'none';
+        } else {
+            console.log('✅ Email service ready to send');
+        }
+        console.log('='.repeat(60) + '\n');
+    });
 } else {
-    console.log('⚠️  No BREVO_API_KEY found in environment variables.');
-    console.log('   Email notifications will not work.');
-    console.log('   Please add BREVO_API_KEY to Render environment settings.');
     console.log('='.repeat(60) + '\n');
 }
 
@@ -1196,21 +1228,19 @@ Active Zone Hub Team
         console.log(`Order: ${orderDetails.orderId}`);
         console.log('='.repeat(60));
         
-        // Send email using Brevo API
-        if (emailService === 'brevo' && brevoApiInstance) {
-            const sendSmtpEmail = new brevo.SendSmtpEmail();
-            sendSmtpEmail.sender = {
-                name: process.env.SMTP_FROM_NAME || 'Active Zone Hub',
-                email: process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'
+        // Send email using nodemailer
+        if (emailTransporter) {
+            const mailOptions = {
+                from: `${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`,
+                to: customerEmail,
+                subject: `Order Confirmation - ${orderDetails.orderId}`,
+                text: emailText,
+                html: emailHTML
             };
-            sendSmtpEmail.to = [{ email: customerEmail }];
-            sendSmtpEmail.subject = `Order Confirmation - ${orderDetails.orderId}`;
-            sendSmtpEmail.htmlContent = emailHTML;
-            sendSmtpEmail.textContent = emailText;
             
-            const result = await brevoApiInstance.sendTransacEmail(sendSmtpEmail);
+            const result = await emailTransporter.sendMail(mailOptions);
             
-            console.log('✅ Email sent successfully via Brevo API!');
+            console.log('✅ Email sent successfully!');
             console.log(`   Message ID: ${result.messageId}`);
             console.log('='.repeat(60) + '\n');
             
@@ -1423,21 +1453,19 @@ Active Zone Hub Team
         console.log(`New Status: ${newStatus}`);
         console.log('='.repeat(60));
         
-        // Send email using Brevo API
-        if (emailService === 'brevo' && brevoApiInstance) {
-            const sendSmtpEmail = new brevo.SendSmtpEmail();
-            sendSmtpEmail.sender = {
-                name: process.env.SMTP_FROM_NAME || 'Active Zone Hub',
-                email: process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'
+        // Send email using nodemailer
+        if (emailTransporter) {
+            const mailOptions = {
+                from: `${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'orders@activezone.ng'}>`,
+                to: customerEmail,
+                subject: `${content.title} - ${orderDetails.orderId}`,
+                text: emailText,
+                html: emailHTML
             };
-            sendSmtpEmail.to = [{ email: customerEmail }];
-            sendSmtpEmail.subject = `${content.title} - ${orderDetails.orderId}`;
-            sendSmtpEmail.htmlContent = emailHTML;
-            sendSmtpEmail.textContent = emailText;
             
-            const result = await brevoApiInstance.sendTransacEmail(sendSmtpEmail);
+            const result = await emailTransporter.sendMail(mailOptions);
             
-            console.log('✅ Status update email sent successfully via Brevo API!');
+            console.log('✅ Status update email sent successfully!');
             console.log(`   Message ID: ${result.messageId}`);
             console.log('='.repeat(60) + '\n');
             
