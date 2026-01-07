@@ -12,8 +12,26 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Orders file path
-const ORDERS_FILE = path.join(__dirname, 'orders.json');
+// Orders file path - use persistent disk if available (Render), otherwise local
+const DATA_DIR = process.env.RENDER ? '/app/data' : __dirname;
+const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+
+// Ensure data directory exists (for Render persistent disk)
+if (process.env.RENDER && !fs.existsSync(DATA_DIR)) {
+    try {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+        console.log(`📁 Created data directory: ${DATA_DIR}`);
+    } catch (error) {
+        console.error('❌ Failed to create data directory:', error.message);
+    }
+}
+
+console.log(`💾 Orders will be stored in: ${ORDERS_FILE}`);
+if (process.env.RENDER) {
+    console.log('🔒 Using Render persistent disk for order storage');
+} else {
+    console.log('📂 Using local file storage for order storage');
+}
 
 // Load orders from file on startup
 function loadOrders() {
