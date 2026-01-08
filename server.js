@@ -476,9 +476,18 @@ app.get('/api/products', async (req, res) => {
             });
         }
         
+        // Filter out delivery and pickup products (730312 and 730313)
+        const DELIVERY_PICKUP_PRODUCTS = [730312, 730313];
+        const filteredProducts = (data.result || data).filter(product => {
+            return !DELIVERY_PICKUP_PRODUCTS.includes(parseInt(product.productid));
+        });
+        
+        console.log('Filtered products count:', filteredProducts.length);
+        console.log('Hidden delivery/pickup products: 730312, 730313');
+        
         res.json({ 
             success: true, 
-            products: data.result || data 
+            products: filteredProducts
         });
         
     } catch (error) {
@@ -1570,6 +1579,24 @@ app.post('/api/orders', async (req, res) => {
             productid: parseInt(item.productId),  // Note: lowercase 'productid' as per Gym Master API
             quantity: parseInt(item.quantity)
         }));
+        
+        // Add delivery or pickup product to Gym Master order
+        const DELIVERY_PRODUCT_ID = 730312;  // Delivery ₦5,000
+        const PICKUP_PRODUCT_ID = 730313;    // Pick-Up ₦0 (Free)
+        
+        if (deliveryMethod === 'delivery') {
+            products.push({
+                productid: DELIVERY_PRODUCT_ID,
+                quantity: 1
+            });
+            console.log('✅ Added Delivery product (730312) - ₦5,000');
+        } else {
+            products.push({
+                productid: PICKUP_PRODUCT_ID,
+                quantity: 1
+            });
+            console.log('✅ Added Pick-Up product (730313) - Free');
+        }
         
         const gymMasterPurchaseData = {
             api_key: GYM_MASTER_CONFIG.apiKey,
