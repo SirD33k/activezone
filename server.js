@@ -12,23 +12,52 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Orders file path - use persistent disk if available (Render), otherwise local
-const DATA_DIR = process.env.RENDER ? '/app/data' : __dirname;
+// Orders file path - use persistent volume if available (Railway/Render), otherwise local
+const isProduction = !!(process.env.RAILWAY_ENVIRONMENT || process.env.RENDER);
+const DATA_DIR = isProduction ? '/app/data' : __dirname;
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 
-console.log(`💾 Orders will be stored in: ${ORDERS_FILE}`);
-if (process.env.RENDER) {
-    console.log('🔒 Using Render persistent disk for order storage');
-    // Check if the data directory exists (it should be mounted by Render)
+// Log environment detection
+console.log('\n' + '='.repeat(60));
+console.log('STORAGE CONFIGURATION');
+console.log('='.repeat(60));
+console.log('Environment detected:');
+console.log(`  Railway: ${!!process.env.RAILWAY_ENVIRONMENT}`);
+console.log(`  Render: ${!!process.env.RENDER}`);
+console.log(`  Production: ${isProduction}`);
+console.log(`  Storage path: ${ORDERS_FILE}`);
+
+if (isProduction) {
+    console.log('🔒 Using persistent volume for order storage');
+    
+    // Check if the data directory exists (it should be mounted by platform)
     if (!fs.existsSync(DATA_DIR)) {
-        console.log('⚠️  Warning: /app/data directory not found. Persistent disk may not be mounted.');
-        console.log('   Please add a persistent disk in Render dashboard with mount path: /app/data');
+        console.log('⚠️  WARNING: /app/data directory not found!');
+        console.log('   Persistent volume may not be mounted.');
+        if (process.env.RAILWAY_ENVIRONMENT) {
+            console.log('   Railway: Add a volume in Settings → Volumes with mount path: /app/data');
+        } else {
+            console.log('   Render: Add a disk in Settings → Disks with mount path: /app/data');
+        }
     } else {
-        console.log('✅ Persistent disk directory found');
+        console.log('✅ Persistent volume directory found');
+        
+        // Test write access
+        try {
+            const testFile = path.join(DATA_DIR, '.volume-test');
+            fs.writeFileSync(testFile, 'test-' + Date.now());
+            fs.unlinkSync(testFile);
+            console.log('✅ Volume is writable');
+        } catch (error) {
+            console.error('❌ Volume write test failed:', error.message);
+            console.error('   Orders may not persist across deployments!');
+        }
     }
 } else {
-    console.log('📂 Using local file storage for order storage');
+    console.log('📂 Using local file storage (development mode)');
 }
+
+console.log('='.repeat(60) + '\n');
 
 // Load orders from file on startup
 function loadOrders() {
