@@ -2,7 +2,8 @@
 
 // Initialize cart (ShoppingCart class is loaded from cartManager.js)
 const cart = new ShoppingCart();
-const API_BASE = 'https://active-zone-hub.onrender.com/api';
+// For local development, use backend port directly. For production, use relative path
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : window.location.origin + '/api';
 
 // ============================================
 // FETCH AND RENDER PRODUCTS FROM GYM MASTER API
@@ -16,37 +17,106 @@ async function fetchAndRenderProducts() {
         return;
     }
     
-    // Show loading state
-    productsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">Loading products...</div>';
+    // Store original static content as fallback
+    const originalContent = productsGrid.innerHTML;
+    
+    // Only show loading state if API takes longer than 500ms
+    let loadingTimeout;
+    let showLoading = false;
+    
+    const showLoadingState = () => {
+        if (!showLoading) {
+            showLoading = true;
+            productsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">Loading products...</div>';
+        }
+    };
+    
+    // Set timeout to show loading after 500ms
+    loadingTimeout = setTimeout(showLoadingState, 500);
     
     try {
         const response = await fetch(API_BASE + '/products');
         const result = await response.json();
+        
+        // Clear the loading timeout since we got a response
+        clearTimeout(loadingTimeout);
         
         console.log('Products API response:', result);
         
         if (result.success && result.products && result.products.length > 0) {
             console.log('Sample product:', JSON.stringify(result.products[0], null, 2));
             
+            // Filter out delivery and pickup products (730312 and 730313) as these are service items
+            const DELIVERY_PICKUP_PRODUCTS = [730312, 730313];
+            const filteredProducts = result.products.filter(product => {
+                return !DELIVERY_PICKUP_PRODUCTS.includes(parseInt(product.productid));
+            });
+            
+            console.log(`${result.products.length} total products, ${filteredProducts.length} after filtering out delivery/pickup`);
+            
             // Filter out products with zero stock (maxquantity)
-            const inStockProducts = result.products.filter(product => {
+            const inStockProducts = filteredProducts.filter(product => {
                 const stock = product.maxquantity || 0;
                 return stock > 0;
             });
             
-            console.log(`Total products: ${result.products.length}, In stock: ${inStockProducts.length}`);
+            console.log(`${filteredProducts.length} filtered products, ${inStockProducts.length} in stock`);
+            
+            // Log some sample products for debugging
+            if (inStockProducts.length > 0) {
+                console.log('First few in-stock products:');
+                inStockProducts.slice(0, 3).forEach((product, index) => {
+                    console.log(`  ${index + 1}. ${product.name} (ID: ${product.productid}, Stock: ${product.maxquantity})`);
+                });
+            }
             
             if (inStockProducts.length > 0) {
-                renderProducts(inStockProducts);
+                // Only replace content if we have a reasonable number of products
+                if (inStockProducts.length >= 3) {
+                    console.log(`Rendering ${inStockProducts.length} products from API`);
+                    // Only show loading if we're actually going to replace content
+                    if (!showLoading) {
+                        showLoadingState();
+                    }
+                    renderProducts(inStockProducts);
+                } else {
+                    console.log(`Only ${inStockProducts.length} products from API, keeping static content`);
+                    // Don't replace content, just ensure cart works
+                    attachAddToCartListeners();
+                }
             } else {
-                productsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No products in stock at the moment.</div>';
+                // If no in-stock products from API, keep static content
+                console.log('No in-stock products from API, keeping static content');
+                // Don't replace content, just ensure cart works
+                attachAddToCartListeners();
             }
         } else {
-            productsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No products available at the moment.</div>';
+            // If API returns no products, keep static content
+            console.log('API returned no products, keeping static content');
+            // Don't replace content, just ensure cart works
+            attachAddToCartListeners();
         }
     } catch (error) {
         console.error('Error fetching products:', error);
-        productsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;">Failed to load products. Please try again later.</div>';
+        
+        // Clear the loading timeout
+        clearTimeout(loadingTimeout);
+        
+        // If API fails, keep static content but add refresh option
+        // Don't replace content, just ensure cart works
+        attachAddToCartListeners();
+        
+        // Add a refresh button after the existing content
+        const refreshButton = document.createElement("button");
+        refreshButton.textContent = "Retry API Connection";
+        refreshButton.className = "btn-primary";
+        refreshButton.style.margin = "20px auto";
+        refreshButton.style.display = "block";
+        refreshButton.style.padding = "12px 24px";
+        refreshButton.onclick = fetchAndRenderProducts;
+        
+        // Append to products grid
+        productsGrid.appendChild(refreshButton);
     }
 }
 
@@ -155,11 +225,14 @@ function formatPrice(price) {
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Store page loaded');
     
-    // Fetch and render products from API
-    fetchAndRenderProducts();
+    // First, ensure static content has proper cart functionality
+    attachAddToCartListeners();
     
-    // Setup filter functionality
+    // Setup filter functionality immediately
     setupFilters();
+    
+    // Try API call but be very conservative about replacing content
+    fetchAndRenderProducts();
 });
 
 function setupFilters() {
@@ -213,7 +286,15 @@ function attachAddToCartListeners() {
             
             // Get product ID and stock level
             const productId = this.getAttribute('data-product-id');
+            const productLink = this.getAttribute('data-link');
             const stockLevel = parseInt(this.getAttribute('data-stock'));
+            
+            // If it has a data-link attribute, it's an external link, not for cart
+            if (productLink) {
+                // Open external link in new tab
+                window.open(productLink, '_blank');
+                return;
+            }
             
             if (!productId) {
                 console.error('No product ID found for this product');

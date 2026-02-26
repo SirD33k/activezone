@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="./images/azh-favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RDX Store | Active Zone Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="container">
+                <a href="index.html" class="logo">
+                  <img src="./images/azh-white-logo.png" alt="Active Zone Hub" class="logo-img">
+                  <span class="logo-text">Active Zone Hub</span>
+                </a>
+                <button class="menu-toggle" aria-label="Toggle navigation">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="store.html">RDX Store</a></li>
+                    <li><a href="membership.html">Membership</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="membership.html" class="btn-primary">Join Now</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <header class="page-header store-header" style="background-image: url('./images/hero/hero-store.jpg')">
+            <h1>RDX <span class="text-gold">Store</span></h1>
+            <p>Premium Fitness Equipment & Accessories</p>
+        </header>
+
+        <!-- Store Content -->
+        <section class="store-main">
+            <div class="container">
+                <!-- Store Header with Cart Button -->
+                <div class="store-toolbar">
+                    <h2 class="store-title">Shop Our Products</h2>
+                    <div style="display: flex; gap: 15px;">
+                        <a href="track-order.html" class="btn-track-order">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            <span>Track Order</span>
+                        </a>
+                        <a href="cart.html" class="btn-view-cart" id="viewCartBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"/>
+                                <circle cx="20" cy="21" r="1"/>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                            </svg>
+                            <span>View Cart</span>
+                            <span class="cart-badge" id="cartCount">0</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Category Filters -->
+                <div class="store-filters">
+                    <button class="filter-btn active" data-category="all">All Products</button>
+                    <button class="filter-btn" data-category="gloves">Gloves</button>
+                    <button class="filter-btn" data-category="belts">Belts</button>
+                    <button class="filter-btn" data-category="apparel">Apparel</button>
+                    <button class="filter-btn" data-category="wraps">Wraps</button>
+                    <button class="filter-btn" data-category="accessories">Accessories</button>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="products-grid" id="productsGrid">
+                    <!-- Gloves -->
+                    <div class="product-card" data-category="gloves">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730160.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>GYM GLOVES SUMBLIMATION F6 ORANGE-M</h3>
+                            <p class="product-price">₦19,000</p>
+                            <p class="product-description">Premium padded gloves for optimal grip and protection during
+                                workouts.</p>
+                            <button class="btn-add-to-cart" data-product-id="730160">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="gloves">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730163.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>GYM GLOVES SUMBLIMATION F6 PINK-M</h3>
+                            <p class="product-price">₦19,000</p>
+                            <p class="product-description">Premium padded gloves for optimal grip and protection during
+                                workouts.</p>
+                            <button class="btn-add-to-cart" data-product-id="730163">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="gloves">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730162.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>GYM GLOVES SUMBLIMATION F6 PINK-S</h3>
+                            <p class="product-price">₦19,000</p>
+                            <p class="product-description">Premium padded gloves for optimal grip and protection during
+                                workouts.</p>
+                            <button class="btn-add-to-cart" data-product-id="730162">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="gloves">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730164.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>GYM GLOVES SUMBLIMATION F6 RED-L</h3>
+                            <p class="product-price">₦19,000</p>
+                            <p class="product-description">Premium padded gloves for optimal grip and protection during
+                                workouts.</p>
+                            <button class="btn-add-to-cart" data-product-id="730164">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="gloves">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730165.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>GYM GLOVES SUMBLIMATION F6 RED-XL</h3>
+                            <p class="product-price">₦19,000</p>
+                            <p class="product-description">Premium padded gloves for optimal grip and protection during
+                                workouts.</p>
+                            <button class="btn-add-to-cart" data-product-id="730165">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="gloves">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730183.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>BOXING GLOVE F15 MATTE BLACK-10oz</h3>
+                            <p class="product-price">₦63,500</p>
+                            <p class="product-description">Get a grip on your workout. Boxing Glove Premium gloves deliver
+                                 superior padding for protection and an optimal grip for power, so you can train harder and safer.</p>
+                            <button class="btn-add-to-cart" data-product-id="730183">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="gloves">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730184.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>BOXING GLOVE F15 MATTE BLACK-12oz</h3>
+                            <p class="product-price">₦63,500</p>
+                            <p class="product-description">Get a grip on your workout. Boxing Glove Premium gloves deliver
+                                 superior padding for protection and an optimal grip for power, so you can train harder and safer.</p>
+                            <button class="btn-add-to-cart" data-product-id="730184">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="gloves">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730217.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>BOXING GLOVES F6 MATTE BLACK-12OZ</h3>
+                            <p class="product-price">₦63,500</p>
+                            <p class="product-description">Get a grip on your workout. Boxing Glove Premium gloves deliver
+                                 superior padding for protection and an optimal grip for power, so you can train harder and safer.</p>
+                            <button class="btn-add-to-cart" data-product-id="730217">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="gloves">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730216.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>GRAPPLING GLOVE REX BLUE T6 PLUS-M</h3>
+                            <p class="product-price">₦50,000</p>
+                            <p class="product-description">Get a grip on your workout. Boxing Glove Premium gloves deliver
+                                 superior padding for protection and an optimal grip for power, so you can train harder and safer.</p>
+                            <button class="btn-add-to-cart" data-product-id="730216">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <!-- Belts -->
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730178.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>BELT 4" LEATHER BLACK GOLD-L</h3>
+                            <p class="product-price">₦48,500</p>
+                            <p class="product-description">Heavy-duty belt for back support during heavy lifts and
+                                squats.</p>
+                            <button class="btn-add-to-cart" data-product-id="730178">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730177.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>BELT 4" LEATHER BLACK GOLD-M</h3>
+                            <p class="product-price">₦48,500</p>
+                            <p class="product-description">Heavy-duty belt for back support during heavy lifts and
+                                squats.</p>
+                            <button class="btn-add-to-cart" data-product-id="730177">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730179.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>BELT 4" LEATHER FULL BLACK-L</h3>
+                            <p class="product-price">₦54,500</p>
+                            <p class="product-description">Heavy-duty belt for back support during heavy lifts and
+                                squats.</p>
+                            <button class="btn-add-to-cart" data-product-id="730179">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730180.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>BELT 4" LEATHER FULL BLACK-XL</h3>
+                            <p class="product-price">₦54,500</p>
+                            <p class="product-description">Heavy-duty belt for back support during heavy lifts and
+                                squats.</p>
+                            <button class="btn-add-to-cart" data-product-id="730180">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730181.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>BELT PRO LIVER BUCKLE BLACK LEATHER PLUS-L</h3>
+                            <p class="product-price">₦97,000</p>
+                            <p class="product-description">Heavy-duty belt for back support during heavy lifts and
+                                squats.</p>
+                            <button class="btn-add-to-cart" data-product-id="730181">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730182.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>BELT PRO LIVER BUCKLE BLACK LEATHER PLUS-XL</h3>
+                            <p class="product-price">₦97,000</p>
+                            <p class="product-description">Heavy-duty belt for back support during heavy lifts and
+                                squats.</p>
+                            <button class="btn-add-to-cart" data-product-id="730182">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730186.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WEIGHT LIFTING BELT EVA CURVE RX4 BLACK-L</h3>
+                            <p class="product-price">₦32,500</p>
+                            <p class="product-description">Crafted from high-grade, wear-resistant materials, 
+                                the RDX EVA CURVE RX4 is built to withstand the rigors of daily training. </p>
+                            <button class="btn-add-to-cart" data-product-id="730186">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730185.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WEIGHT LIFTING BELT EVA CURVE RX4 BLACK-S</h3>
+                            <p class="product-price">₦32,500</p>
+                            <p class="product-description">Crafted from high-grade, wear-resistant materials, 
+                                the RDX EVA CURVE RX4 is built to withstand the rigors of daily training.</p>
+                            <button class="btn-add-to-cart" data-product-id="730185">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730187.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WEIGHT LIFTING BELT EVA CURVE RX4 BLACK-XL</h3>
+                            <p class="product-price">₦32,500</p>
+                            <p class="product-description">Crafted from high-grade, wear-resistant materials, 
+                                the RDX EVA CURVE RX4 is built to withstand the rigors of daily training.</p>
+                            <button class="btn-add-to-cart" data-product-id="730187">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730190.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WEIGHT LIFTING BELT EVA CURVE RX4 BLUE-L</h3>
+                            <p class="product-price">₦32,500</p>
+                            <p class="product-description">Crafted from high-grade, wear-resistant materials, 
+                                the RDX EVA CURVE RX4 is built to withstand the rigors of daily training.</p>
+                            <button class="btn-add-to-cart" data-product-id="730190">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730189.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WEIGHT LIFTING BELT EVA CURVE RX4 BLUE-M</h3>
+                            <p class="product-price">₦32,500</p>
+                            <p class="product-description">Crafted from high-grade, wear-resistant materials, 
+                                the RDX EVA CURVE RX4 is built to withstand the rigors of daily training.</p>
+                            <button class="btn-add-to-cart" data-product-id="730189">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730192.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WEIGHT LIFTING BELT EVA CURVE RX4 PINK-L</h3>
+                            <p class="product-price">₦32,500</p>
+                            <p class="product-description">Crafted from high-grade, wear-resistant materials, 
+                                the RDX EVA CURVE RX4 is built to withstand the rigors of daily training.</p>
+                            <button class="btn-add-to-cart" data-product-id="730192">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="belts">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730191.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WEIGHT LIFTING BELT EVA CURVE RX4 PINK-M</h3>
+                            <p class="product-price">₦32,500</p>
+                            <p class="product-description">Crafted from high-grade, wear-resistant materials, 
+                                the RDX EVA CURVE RX4 is built to withstand the rigors of daily training.</p>
+                            <button class="btn-add-to-cart" data-product-id="730191">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <!-- Apparel -->
+                     <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730139.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>CLOTHING T-SHIRT MICRO T2 BLACK PLUS-M</h3>
+                            <p class="product-price">₦29,000</p>
+                            <p class="product-description">Fitted compression shirt for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-product-id="730139">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730140.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT T-SHIRT MENS M1 NAVY BLUE-3XL</h3>
+                            <p class="product-price">₦47,000</p>
+                            <p class="product-description">Fitted compression shirt for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-product-id="730140">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730215.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WAKO T-SHIRTS T1 BLUE-L</h3>
+                            <p class="product-price">₦46,500</p>
+                            <p class="product-description">Fitted compression shirt for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-product-id="730215">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730214.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WAKO T-SHIRTS T1 BLUE-M</h3>
+                            <p class="product-price">₦46,500</p>
+                            <p class="product-description">Fitted compression shirt for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-product-id="730214">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730213.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>WAKO T-SHIRTS T1 RED-S</h3>
+                            <p class="product-price">₦46,500</p>
+                            <p class="product-description">Fitted compression shirt for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-product-id="730213">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730132.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>CLOTHING T15 COMPRESSION SHORTS BLACK-L</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training
+                                sessions.</p>
+                            <button class="btn-add-to-cart" data-product-id="730132">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730131.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>CLOTHING T15 COMPRESSION SHORTS BLACK-M</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training
+                                sessions.</p>
+                            <button class="btn-add-to-cart" data-product-id="730131">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730133.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>CLOTHING T15 COMPRESSION TROUSER BLACK-L</h3>
+                            <p class="product-price">₦43,500</p>
+                            <p class="product-description">Flexible training pants with moisture-wicking technology.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730133">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730134.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>CLOTHING T15 COMPRESSION TROUSER BLACK-XL</h3>
+                            <p class="product-price">₦43,500</p>
+                            <p class="product-description">Flexible training pants with moisture-wicking technology.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730134">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730159.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN LEGGING W1 ARMY GREEN-L</h3>
+                            <p class="product-price">₦45,500</p>
+                            <p class="product-description">Fitted compression legging for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730159">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730158.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN LEGGING W1 ARMY GREEN-S</h3>
+                            <p class="product-price">₦45,500</p>
+                            <p class="product-description">Fitted compression legging for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730158">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730151.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN LEGGING W1 BLACK-L</h3>
+                            <p class="product-price">₦45,500</p>
+                            <p class="product-description">Fitted compression legging for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730151">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730152.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN LEGGING W1 BLACK-M</h3>
+                            <p class="product-price">₦45,500</p>
+                            <p class="product-description">Fitted compression legging for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730152">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730153.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN LEGGING W1 BLACK-XL</h3>
+                            <p class="product-price">₦45,000</p>
+                            <p class="product-description">Fitted compression legging for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730153">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730157.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN LEGGING W1 BLUE-L</h3>
+                            <p class="product-price">₦45,500</p>
+                            <p class="product-description">Fitted compression legging for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730157">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730156.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN LEGGING W1 BLUE-M</h3>
+                            <p class="product-price">₦45,500</p>
+                            <p class="product-description">Fitted compression legging for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730156">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730155.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN LEGGING W1 GREY-L</h3>
+                            <p class="product-price">₦45,500</p>
+                            <p class="product-description">Fitted compression legging for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730157">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730154.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN LEGGING W1 GREY-M</h3>
+                            <p class="product-price">₦45,500</p>
+                            <p class="product-description">Fitted compression legging for enhanced muscle support and
+                                recovery.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730154">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730142.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 ARMY GREEN-L</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730142">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730141.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 ARMY GREEN-M</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730141">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730144.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 BLACK-L</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730144">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730143.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 BLACK-M</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730143">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730145.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 BLACK-XL</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730145">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730148.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 GREY-L</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730148">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730147.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 GREY-M</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730147">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730146.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 GREY-S</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730146">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730149.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 GREY-XL</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730149">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="apparel">
+                        <div class="product-image"
+                            style="background-image: url('https://activezone.gymmasteronline.com/static/asset/activezone.asset/product_730150.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>SWEAT WOMEN'S SHORTS W1 NAVY BLUE-L</h3>
+                            <p class="product-price">₦40,000</p>
+                            <p class="product-description">Breathable athletic shorts perfect for intense training sessions.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop/730150">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <!-- Wraps -->
+                    <div class="product-card" data-category="wraps">
+                        
+                    </div>
+
+                    <!-- Accessories -->
+                    <div class="product-card" data-category="accessories">
+                        <div class="product-image"
+                            style="background-image: url('./images/products/product-bar-pad.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>Bar Pad</h3>
+                            <p class="product-price">₦3,500</p>
+                            <p class="product-description">Protective foam pad for comfortable barbell exercises.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="accessories">
+                        <div class="product-image"
+                            style="background-image: url('./images/products/product-ankle-support.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>Ankle Pro Support</h3>
+                            <p class="product-price">₦6,000</p>
+                            <p class="product-description">Professional ankle support for stability during leg
+                                exercises.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop">Buy
+                                Now</button>
+                        </div>
+                    </div>
+
+                    <div class="product-card" data-category="accessories">
+                        <div class="product-image"
+                            style="background-image: url('./images/products/product-resistance-bands.jpg')">
+                        </div>
+                        <div class="product-info">
+                            <h3>Resistance Bands Set</h3>
+                            <p class="product-price">₦8,000</p>
+                            <p class="product-description">Complete set of resistance bands for versatile workouts.</p>
+                            <button class="btn-add-to-cart" data-link="https://activezone.gymmasteronline.com/portal/shop">Buy
+                                Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <h3>Active Zone Hub</h3>
+                        <p>Elevating lifestyles through fitness, beauty, and recreation.</p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="services.html">Services</a></li>
+                            <li><a href="store.html">Store</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-contact">
+                        <h4>Contact Us</h4>
+                        <p>29 Hainat Augusto Avenue<br>Orile-Agege, Lagos</p>
+                        <p>support@activezone.ng</p>
+                        <p>+234 803 042 8467</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Active Zone Hub. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script src="./src/main.js"></script>
+    <script src="./src/cartManager.js"></script>
+    <script src="./src/store.js"></script>
+</body>
+
+</html>

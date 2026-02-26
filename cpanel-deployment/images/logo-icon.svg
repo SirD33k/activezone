@@ -1,0 +1,6 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Active Zone Hub - White Version (for dark backgrounds) -->
+  <circle cx="30" cy="30" r="25" fill="#D4AF37"/>
+  <path d="M20 30 L30 20 L40 30 L30 40 Z" fill="#FFFFFF"/>
+  <circle cx="30" cy="30" r="8" fill="#D4AF37"/>
+</svg>

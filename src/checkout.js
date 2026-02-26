@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', function () {
     
     var cart = new ShoppingCart();
     var DELIVERY_FEE = 5000;
-    var API_BASE = 'https://active-zone-hub.onrender.com/api';
+    // For local development, use backend port directly. For production, use relative path
+    var API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : window.location.origin + '/api';
     var deliveryMethod = 'pickup';
     var memberType = 'new';
     

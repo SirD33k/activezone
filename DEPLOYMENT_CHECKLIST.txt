@@ -1,0 +1,254 @@
+================================================================================
+           ACTIVE ZONE HUB - CPANEL DEPLOYMENT CHECKLIST
+================================================================================
+
+✅ = Completed
+⏳ = Needs your action
+📁 = File/Folder ready
+
+================================================================================
+                    PRE-DEPLOYMENT PREPARATION
+================================================================================
+
+✅ Frontend API URLs updated to relative paths
+   - checkout.js: Using window.location.origin + '/api'
+   - store.js: Using window.location.origin + '/api'
+   - orders.html: Using window.location.origin + '/api'
+   - track-order.html: Using window.location.origin + '/api'
+
+✅ Security improvements applied to server.js
+   - Removed hardcoded API keys
+   - Added environment variable validation
+   - Improved error handling
+
+✅ Production build completed successfully
+   📁 dist/ folder created with optimized files (47.99 kB CSS)
+
+✅ Database schema ready
+   📁 database/schema.sql (MySQL compatible)
+
+✅ Environment configuration template created
+   📁 .env file with cPanel-specific settings
+
+✅ Deployment guide created
+   📁 CPANEL_DEPLOYMENT_GUIDE.txt (complete step-by-step instructions)
+
+================================================================================
+                    ACTIONS REQUIRED BEFORE UPLOAD
+================================================================================
+
+⏳ 1. UPDATE .ENV FILE WITH YOUR ACTUAL VALUES
+   
+   Open: C:\Users\HP\OneDrive\Documents\Active\.env
+   
+   Replace these placeholders:
+   
+   DB_USER=your_cpanel_username_dbname
+   DB_PASSWORD=your_mysql_password
+   DB_NAME=your_cpanel_username_activezone
+   
+   APP_URL=https://yourdomain.com
+   
+   PAYSTACK_SECRET_KEY=sk_live_YOUR_LIVE_SECRET_KEY
+   PAYSTACK_PUBLIC_KEY=pk_live_YOUR_LIVE_PUBLIC_KEY
+   
+   TOTP_SECRET=YOUR_TOTP_SECRET
+
+⏳ 2. GET PAYSTACK LIVE API KEYS
+   
+   - Login to: https://dashboard.paystack.com
+   - Navigate to: Settings > API Keys & Webhooks
+   - Switch to "Live" mode
+   - Copy your Live Public Key (pk_live_...)
+   - Copy your Live Secret Key (sk_live_...)
+   - Update .env file with these keys
+
+⏳ 3. VERIFY CPANEL NODE.JS SUPPORT
+   
+   - Login to your cPanel account
+   - Look for: "Setup Node.js App" or "Node.js Selector"
+   - If not found, contact your hosting provider
+   - Required: Node.js version 18.x or higher
+
+================================================================================
+                    FILES TO UPLOAD TO CPANEL
+================================================================================
+
+📁 BACKEND FILES (Upload to: /home/yourusername/active-zone-hub/)
+   ✅ server.js (1906 lines, configured for MySQL + cPanel)
+   ✅ package.json (all dependencies listed)
+   ✅ .env (YOUR CONFIGURED FILE - keep secure!)
+   ✅ database/schema.sql (MySQL database structure)
+
+📁 FRONTEND FILES (Option 1: From dist/ folder)
+   ✅ dist/index.html
+   ✅ dist/about.html
+   ✅ dist/services.html
+   ✅ dist/store.html
+   ✅ dist/membership.html
+   ✅ dist/gallery.html
+   ✅ dist/contact.html
+   ✅ dist/assets/ (all CSS, JS, and images)
+
+📁 FRONTEND FILES (Option 2: Source files - if you need backend to serve them)
+   ✅ index.html
+   ✅ store.html
+   ✅ checkout.html
+   ✅ cart.html
+   ✅ orders.html
+   ✅ track-order.html
+   ✅ payment-success.html
+   ✅ src/ folder (all JavaScript)
+   ✅ images/ folder (if any custom images)
+
+📝 RECOMMENDED: Upload source files + backend together
+   This allows the Node.js server to serve all pages directly
+
+================================================================================
+                    FILES YOU DON'T NEED TO UPLOAD
+================================================================================
+
+❌ DO NOT UPLOAD THESE:
+   - node_modules/ (will be created on server via npm install)
+   - .git/ (version control - not needed on production)
+   - vite.config.js (development tool only)
+   - *.bat files (Windows batch scripts)
+   - README_IMPORTANT.txt (local documentation)
+   - TEST_FILE_ACCESS.html (testing file)
+   - deploy-to-ec2.ps1 (EC2 deployment script - not for cPanel)
+   - CPANEL_DEPLOYMENT_GUIDE.txt (keep locally for reference)
+   - DEPLOYMENT_CHECKLIST.txt (this file - keep locally)
+
+================================================================================
+                    CPANEL DEPLOYMENT STEPS SUMMARY
+================================================================================
+
+Step 1: Create MySQL Database in cPanel
+   - cPanel > MySQL Databases
+   - Create database: activezone
+   - Create user with strong password
+   - Grant ALL PRIVILEGES
+   - Import schema.sql via phpMyAdmin
+
+Step 2: Setup Node.js Application
+   - cPanel > Setup Node.js App
+   - Create new application
+   - Node version: 18.x or higher
+   - Application root: /home/yourusername/active-zone-hub
+   - Startup file: server.js
+
+Step 3: Upload Files
+   - Use cPanel File Manager or FTP
+   - Upload backend files to application root
+   - Upload frontend files to same directory
+   - Set .env permissions to 600
+
+Step 4: Install Dependencies
+   - cPanel > Setup Node.js App
+   - Click "Run NPM Install"
+   - Wait for completion
+
+Step 5: Update .env on Server
+   - Edit .env file with actual database credentials
+   - Update APP_URL to your domain
+   - Add Paystack live keys
+
+Step 6: Start Application
+   - cPanel > Setup Node.js App
+   - Click "Start Application"
+   - Verify status shows "Running"
+
+Step 7: Test Everything
+   - Visit your domain
+   - Test store, checkout, payment
+   - Setup Google Authenticator for orders page
+
+================================================================================
+                    VERIFICATION CHECKLIST
+================================================================================
+
+After deployment, test these URLs (replace yourdomain.com):
+
+⏳ Frontend Pages:
+   [ ] https://yourdomain.com/
+   [ ] https://yourdomain.com/store.html
+   [ ] https://yourdomain.com/checkout.html
+   [ ] https://yourdomain.com/cart.html
+   [ ] https://yourdomain.com/orders.html
+   [ ] https://yourdomain.com/track-order.html
+
+⏳ API Endpoints:
+   [ ] https://yourdomain.com/api/health
+   [ ] https://yourdomain.com/api/products
+
+⏳ Complete Checkout Flow:
+   [ ] Add products to cart
+   [ ] Proceed to checkout
+   [ ] Fill customer details
+   [ ] Complete payment with Paystack
+   [ ] Receive order confirmation email
+   [ ] Track order with reference number
+
+⏳ Admin Access:
+   [ ] Setup Google Authenticator: https://yourdomain.com/api/totp/setup
+   [ ] Access orders page with TOTP code
+   [ ] View and manage orders
+   [ ] Update order statuses
+
+================================================================================
+                    QUICK REFERENCE
+================================================================================
+
+📁 Local Project Path:
+   C:\Users\HP\OneDrive\Documents\Active\
+
+📁 Production Build Output:
+   C:\Users\HP\OneDrive\Documents\Active\dist\
+
+📖 Full Deployment Guide:
+   C:\Users\HP\OneDrive\Documents\Active\CPANEL_DEPLOYMENT_GUIDE.txt
+
+🔧 Configuration File:
+   C:\Users\HP\OneDrive\Documents\Active\.env
+
+📊 Database Schema:
+   C:\Users\HP\OneDrive\Documents\Active\database\schema.sql
+
+💻 Main Server File:
+   C:\Users\HP\OneDrive\Documents\Active\server.js
+
+================================================================================
+                    SUPPORT & TROUBLESHOOTING
+================================================================================
+
+If you encounter issues during deployment:
+
+1. Review the full deployment guide:
+   CPANEL_DEPLOYMENT_GUIDE.txt (section: TROUBLESHOOTING)
+
+2. Check application logs:
+   cPanel > Setup Node.js App > View Logs
+
+3. Verify database connection:
+   phpMyAdmin > SQL > Run: SELECT 1;
+
+4. Test API connectivity:
+   Visit: https://yourdomain.com/api/health
+
+5. Check browser console for errors:
+   Press F12 > Console tab
+
+================================================================================
+                    READY TO DEPLOY!
+================================================================================
+
+All files are prepared and ready for cPanel deployment.
+
+Next steps:
+1. Complete the "ACTIONS REQUIRED" section above
+2. Follow the deployment steps in CPANEL_DEPLOYMENT_GUIDE.txt
+3. Test thoroughly before going live
+
+Good luck! 🚀
+
+================================================================================
