@@ -29,3 +29,4 @@ pending-emails.json
 *.njsproj
 *.sln
 *.sw?
+nul

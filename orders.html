@@ -399,6 +399,16 @@
                     <i class="fas fa-spinner fa-spin"></i> Loading orders...
                 </div>
             </div>
+            <!-- Pagination -->
+            <div id="pagination" style="display: none; justify-content: center; align-items: center; padding: 20px; gap: 10px; background: white; border-top: 1px solid #eee;">
+                <button onclick="changePage(-1)" id="prevBtn" class="btn-action" style="background: #666; padding: 8px 16px;">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo" style="color: #666; font-size: 14px;">Page 1 of 1</span>
+                <button onclick="changePage(1)" id="nextBtn" class="btn-action" style="background: #666; padding: 8px 16px;">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
         </div>
 
@@ -444,12 +454,8 @@
     </div>
 
     <script>
-        // Use relative path for API - works on any domain (localhost or cPanel)
-        const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : window.location.origin + '/api';
+        const API_BASE = '/api';
         let allOrders = [];
-
-        // Simple password authentication for orders page
-        const ORDERS_PASSWORD = 'ActiveZone2026'; // Change this to your preferred password
 
         // Simple authentication
         function checkAuth() {
@@ -484,7 +490,7 @@
                         </button>
                     </form>
                     <p style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-                        <i class="fas fa-info-circle"></i> Default password: ActiveZone2026
+                        <i class="fas fa-info-circle"></i> Hint: AZH
                     </p>
                 </div>
             `;
@@ -494,17 +500,30 @@
             event.preventDefault();
             const password = document.getElementById('adminPassword').value;
             
-            if (password === ORDERS_PASSWORD) {
-                sessionStorage.setItem('ordersAuth', 'true');
-                location.reload();
-                return false;
-            } else {
+            fetch(API_BASE + '/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    sessionStorage.setItem('ordersAuth', 'true');
+                    location.reload();
+                } else {
+                    const errorDiv = document.getElementById('loginError');
+                    errorDiv.textContent = result.error || 'Incorrect password';
+                    errorDiv.style.display = 'block';
+                    document.getElementById('adminPassword').value = '';
+                }
+            })
+            .catch(err => {
                 const errorDiv = document.getElementById('loginError');
-                errorDiv.textContent = 'Incorrect password';
+                errorDiv.textContent = 'Connection error. Make sure server is running.';
                 errorDiv.style.display = 'block';
-                document.getElementById('adminPassword').value = '';
-                return false;
-            }
+            });
+            
+            return false;
         }
 
         function logout() {
@@ -513,15 +532,22 @@
         }
 
         // Load orders from server
+        let pagination = { page: 1, totalPages: 1, total: 0 };
+        
         async function loadOrders() {
+            const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+            const searchTerm = document.getElementById('searchBox')?.value || '';
+            
             try {
-                const response = await fetch(API_BASE + '/orders');
+                const response = await fetch(API_BASE + `/orders?page=${pagination.page}&limit=20&status=${statusFilter}&search=${encodeURIComponent(searchTerm)}`);
                 const result = await response.json();
                 
                 if (result.success && result.orders) {
                     allOrders = result.orders;
+                    pagination = result.pagination || { page: 1, totalPages: 1, total: 0 };
                     displayOrders(allOrders);
                     updateStats(allOrders);
+                    updatePagination();
                 } else {
                     showEmptyState();
                 }
@@ -535,6 +561,28 @@
                     </div>
                 `;
             }
+        }
+        
+        function changePage(delta) {
+            const newPage = pagination.page + delta;
+            if (newPage >= 1 && newPage <= pagination.totalPages) {
+                pagination.page = newPage;
+                loadOrders();
+            }
+        }
+        
+        function updatePagination() {
+            const paginationEl = document.getElementById('pagination');
+            if (pagination.totalPages <= 1) {
+                paginationEl.style.display = 'none';
+                return;
+            }
+            paginationEl.style.display = 'flex';
+            document.getElementById('pageInfo').textContent = `Page ${pagination.page} of ${pagination.totalPages} (${pagination.total} total)`;
+            document.getElementById('prevBtn').disabled = !pagination.hasPrevPage;
+            document.getElementById('nextBtn').disabled = !pagination.hasNextPage;
+            document.getElementById('prevBtn').style.opacity = pagination.hasPrevPage ? '1' : '0.5';
+            document.getElementById('nextBtn').style.opacity = pagination.hasNextPage ? '1' : '0.5';
         }
 
         function displayOrders(orders) {
@@ -821,57 +869,39 @@
             }
         }
 
-        // Search functionality
-        document.getElementById('searchBox').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const filtered = allOrders.filter(order => 
-                order.orderId.toLowerCase().includes(searchTerm) ||
-                order.customer.name.toLowerCase().includes(searchTerm) ||
-                order.customer.email.toLowerCase().includes(searchTerm)
-            );
-            displayOrders(filtered);
-        });
-
-        // Filter and Search Functions
-        function applyFilters() {
-            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
-
-            let filtered = allOrders;
-
-            // Apply search filter
+        // ============================================
+        // REUSABLE FILTER FUNCTIONS
+        // ============================================
+        
+        function filterOrders(orders, searchTerm = '', statusFilter = 'all', dateFilter = 'all') {
+            let filtered = orders;
+            
             if (searchTerm) {
+                const term = searchTerm.toLowerCase();
                 filtered = filtered.filter(order => 
-                    order.orderId.toLowerCase().includes(searchTerm) ||
-                    order.customer.name.toLowerCase().includes(searchTerm) ||
-                    order.customer.email.toLowerCase().includes(searchTerm)
+                    order.orderId.toLowerCase().includes(term) ||
+                    order.customer.name.toLowerCase().includes(term) ||
+                    order.customer.email.toLowerCase().includes(term)
                 );
             }
-
-            // Apply status filter
+            
             if (statusFilter !== 'all') {
-                filtered = filtered.filter(order => {
-                    const status = order.deliveryStatus || 'pending';
-                    return status === statusFilter;
-                });
+                filtered = filtered.filter(order => (order.deliveryStatus || 'pending') === statusFilter);
             }
-
-            // Apply date filter
+            
             if (dateFilter !== 'all') {
                 const now = new Date();
                 const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                 
                 filtered = filtered.filter(order => {
                     const orderDate = new Date(order.timestamp);
-                    
-                    if (dateFilter === 'today') {
-                        return orderDate >= today;
-                    } else if (dateFilter === 'week') {
+                    if (dateFilter === 'today') return orderDate >= today;
+                    if (dateFilter === 'week') {
                         const weekAgo = new Date(today);
                         weekAgo.setDate(weekAgo.getDate() - 7);
                         return orderDate >= weekAgo;
-                    } else if (dateFilter === 'month') {
+                    }
+                    if (dateFilter === 'month') {
                         const monthAgo = new Date(today);
                         monthAgo.setMonth(monthAgo.getMonth() - 1);
                         return orderDate >= monthAgo;
@@ -879,64 +909,46 @@
                     return true;
                 });
             }
-
-            // Update filtered count
-            document.getElementById('filteredCount').textContent = filtered.length;
             
-            displayOrders(filtered);
+            return filtered;
+        }
+        
+        function getFilterValues() {
+            return {
+                searchTerm: document.getElementById('searchBox').value,
+                statusFilter: document.getElementById('statusFilter').value,
+                dateFilter: document.getElementById('dateFilter').value
+            };
         }
 
-        // Export to CSV Function
+        // Debounce function for search
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // Search functionality - now uses applyFilters with debounce
+        document.getElementById('searchBox').addEventListener('input', debounce(applyFilters, 500));
+
+        // Filter and Search Functions
+        function applyFilters() {
+            // Reset to page 1 when filters change and reload from server
+            pagination.page = 1;
+            loadOrders();
+        }
+
+        // Export to CSV Function - now uses reusable filterOrders
         function exportToCSV() {
             if (allOrders.length === 0) {
                 alert('No orders to export');
                 return;
             }
 
-            // Get filtered orders
-            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
-
-            let ordersToExport = allOrders;
-
-            // Apply same filters as display
-            if (searchTerm) {
-                ordersToExport = ordersToExport.filter(order => 
-                    order.orderId.toLowerCase().includes(searchTerm) ||
-                    order.customer.name.toLowerCase().includes(searchTerm) ||
-                    order.customer.email.toLowerCase().includes(searchTerm)
-                );
-            }
-
-            if (statusFilter !== 'all') {
-                ordersToExport = ordersToExport.filter(order => {
-                    const status = order.deliveryStatus || 'pending';
-                    return status === statusFilter;
-                });
-            }
-
-            if (dateFilter !== 'all') {
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                
-                ordersToExport = ordersToExport.filter(order => {
-                    const orderDate = new Date(order.timestamp);
-                    
-                    if (dateFilter === 'today') {
-                        return orderDate >= today;
-                    } else if (dateFilter === 'week') {
-                        const weekAgo = new Date(today);
-                        weekAgo.setDate(weekAgo.getDate() - 7);
-                        return orderDate >= weekAgo;
-                    } else if (dateFilter === 'month') {
-                        const monthAgo = new Date(today);
-                        monthAgo.setMonth(monthAgo.getMonth() - 1);
-                        return orderDate >= monthAgo;
-                    }
-                    return true;
-                });
-            }
+            const { searchTerm, statusFilter, dateFilter } = getFilterValues();
+            const ordersToExport = filterOrders(allOrders, searchTerm, statusFilter, dateFilter);
 
             if (ordersToExport.length === 0) {
                 alert('No orders match the current filters');

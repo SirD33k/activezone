@@ -8,10 +8,28 @@ const mysql = require('mysql2/promise');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const brevo = require('@getbrevo/brevo');
+const rateLimit = require('express-rate-limit');
+const { body, param, query, validationResult } = require('express-validator');
+const fetch = globalThis.fetch;
+const logger = require('./src/utils/logger');
 require('dotenv').config();
+
+// Import routes
+const memberRoutes = require('./src/routes/member');
+const authRoutes = require('./src/routes/auth');
+const productsRoutes = require('./src/routes/products');
+const paymentRoutes = require('./src/routes/payment');
+const ordersRoutes = require('./src/routes/orders');
+const contactRoutes = require('./src/routes/contact');
+const adminRoutes = require('./src/routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Async error handler wrapper
+const asyncHandler = (fn) => (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+};
 
 // File-based storage for orders (when database is not available)
 const ORDERS_FILE = path.join(__dirname, 'orders-data.json');
@@ -84,21 +102,31 @@ async function getOrderFromFile(orderId) {
     }
 }
 
-// MySQL Database Configuration (cPanel)
-// Only create pool if database credentials are provided
+// MySQL Database Configuration (Planetscale/Railway/Local)
+// Only create pool if DATABASE_ENABLED=true and credentials are provided
 let pool = null;
+const USE_DB = process.env.DATABASE_ENABLED === 'true' && process.env.DB_HOST && process.env.DB_USER;
 
-if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME) {
+if (USE_DB) {
     const dbConfig = {
         host: process.env.DB_HOST,
-        port: process.env.DB_PORT || 3307, // Default to 3307 for local MySQL
+        port: process.env.DB_PORT || 3306,
         user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
+        password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME,
         waitForConnections: true,
         connectionLimit: 10,
-        queueLimit: 0
+        queueLimit: 0,
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 0
     };
+
+    // SSL configuration for cloud databases (Planetscale, Railway, etc.)
+    if (process.env.MYSQL_ATTR_SSL_MODE || process.env.DB_SSL === 'true') {
+        dbConfig.ssl = {
+            rejectUnauthorized: true
+        };
+    }
 
     // Create the connection pool
     pool = mysql.createPool(dbConfig);
@@ -107,45 +135,28 @@ if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME) {
     (async () => {
         try {
             const connection = await pool.getConnection();
-            console.log('\n' + '='.repeat(60));
-            console.log('DATABASE CONFIGURATION (MySQL/cPanel)');
-            console.log('='.repeat(60));
-            console.log('✅ Connected to MySQL database successfully');
-            console.log(`   Host: ${dbConfig.host}:${dbConfig.port}`);
-            console.log(`   Database: ${dbConfig.database}`);
+            logger.info('MySQL connected', { host: dbConfig.host, port: dbConfig.port, database: dbConfig.database });
             
             // Check if orders table exists
             const [rows] = await connection.query("SHOW TABLES LIKE 'orders'");
             if (rows.length === 0) {
-                console.log('\n⚠️  WARNING: "orders" table not found!');
-                console.log('   Please import "database/schema.sql" into your database via phpMyAdmin.');
+                logger.warn('Orders table not found. Import database/schema.sql via phpMyAdmin');
             } else {
-                console.log('✅ "orders" table verified');
+                logger.info('Orders table verified');
             }
             
-            console.log('='.repeat(60) + '\n');
             connection.release();
         } catch (error) {
-            console.error('\n❌ MySQL Connection Failed:');
-            console.error(`   Error: ${error.message}`);
-            console.log('   Ensure you have created the database and added credentials to .env\n');
+            logger.error('MySQL connection failed', { error: error.message });
         }
     })();
 } else {
-    console.log('\n' + '='.repeat(60));
-    console.log('💾 DATABASE: File-based mode (MySQL disabled)');
-    console.log('='.repeat(60));
-    console.log('✅ Running without MySQL database');
-    console.log('   Orders will be saved to local files');
-    console.log('   Perfect for local testing!');
-    console.log('   To enable MySQL: Add DB credentials to .env');
-    console.log('='.repeat(60) + '\n');
+    logger.info('Running in file-based mode. Set DATABASE_ENABLED=true in .env to use MySQL');
 }
 
 // Helper function to load orders from MySQL
 async function loadOrdersFromDB() {
-    if (!pool) {
-        console.log('💾 Loading orders from file storage');
+    if (!USE_DB || !pool) {
         return loadOrdersFromFile();
     }
     try {
@@ -163,7 +174,7 @@ async function loadOrdersFromDB() {
 
 // Helper function to save a new order to MySQL
 async function saveOrderToDB(order) {
-    if (!pool) {
+    if (!USE_DB || !pool) {
         console.log('💾 Saving order to file storage');
         return await saveOrderToFile(order);
     }
@@ -208,7 +219,7 @@ async function saveOrderToDB(order) {
 
 // Helper function to delete an order from MySQL
 async function deleteOrderFromDB(orderId) {
-    if (!pool) {
+    if (!USE_DB || !pool) {
         // Delete from file
         try {
             const orders = loadOrdersFromFile();
@@ -236,7 +247,7 @@ async function deleteOrderFromDB(orderId) {
 
 // Helper function to update order payment status in MySQL
 async function updateOrderPaymentInDB(orderId, paymentData) {
-    if (!pool) {
+    if (!USE_DB || !pool) {
         console.log('💾 Updating payment status in file storage');
         return await updateOrderInFile(orderId, paymentData);
     }
@@ -270,7 +281,7 @@ const OrderDB = {
     delete: deleteOrderFromDB,
     updatePayment: updateOrderPaymentInDB,
     getById: async (id) => {
-        if (!pool) return await getOrderFromFile(id);
+        if (!USE_DB || !pool) return await getOrderFromFile(id);
         try {
             const [rows] = await pool.query('SELECT * FROM orders WHERE id = ?', [id]);
             if (rows.length === 0) return null;
@@ -286,7 +297,7 @@ const OrderDB = {
         }
     },
     getByReference: async (reference) => {
-        if (!pool) return await getOrderFromFile(reference);
+        if (!USE_DB || !pool) return await getOrderFromFile(reference);
         try {
             const [rows] = await pool.query('SELECT * FROM orders WHERE paymentReference = ?', [reference]);
             if (rows.length === 0) return null;
@@ -302,7 +313,7 @@ const OrderDB = {
         }
     },
     updateStatus: async (id, status) => {
-        if (!pool) {
+        if (!USE_DB || !pool) {
             // Update status in file
             try {
                 const orders = loadOrdersFromFile();
@@ -349,15 +360,27 @@ const TOTP_SECRET = process.env.TOTP_SECRET || speakeasy.generateSecret({
     issuer: 'Active Zone Hub'
 }).base32;
 
-// Log TOTP secret on startup (for initial setup)
-if (!process.env.TOTP_SECRET) {
+// TOTP Configuration for admin login
+const TOTP_SECRET_ADMIN = process.env.TOTP_SECRET_ADMIN || speakeasy.generateSecret({
+    name: 'Active Zone Hub - Admin Login',
+    issuer: 'Active Zone Hub'
+}).base32;
+
+// Log TOTP secrets on startup (for initial setup)
+if (!process.env.TOTP_SECRET || !process.env.TOTP_SECRET_ADMIN) {
     console.log('\n' + '='.repeat(50));
     console.log('🔒 GOOGLE AUTHENTICATOR SETUP');
     console.log('='.repeat(50));
-    console.log('Add this secret to your .env file:');
-    console.log(`TOTP_SECRET=${TOTP_SECRET}`);
+    if (!process.env.TOTP_SECRET_ADMIN) {
+        console.log('Admin Login Secret:');
+        console.log(`TOTP_SECRET_ADMIN=${TOTP_SECRET_ADMIN}`);
+    }
+    if (!process.env.TOTP_SECRET) {
+        console.log('Order Delete Secret:');
+        console.log(`TOTP_SECRET=${TOTP_SECRET}`);
+    }
     const appUrl = process.env.APP_URL || `http://localhost:${PORT}`;
-    console.log(`\nOr scan QR code at: ${appUrl}/api/totp/setup`);
+    console.log(`\nOr scan QR codes at: ${appUrl}/api/totp/setup`);
     console.log('='.repeat(50) + '\n');
 }
 
@@ -380,13 +403,80 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from the root directory
 app.use(express.static(path.join(__dirname)));
 
+// ============================================
+// RATE LIMITING - Protect against brute force
+// ============================================
+
+// Strict rate limit for admin login (5 attempts per 15 minutes)
+const loginRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 attempts
+    message: { success: false, error: 'Too many login attempts. Please try again in 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Strict rate limit for order deletion (3 attempts per 15 minutes)
+const deleteRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 3, // 3 attempts
+    message: { success: false, error: 'Too many delete attempts. Please try again in 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Moderate rate limit for general API (100 requests per minute)
+const generalRateLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 100,
+    message: { success: false, error: 'Too many requests. Please slow down.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Request logging middleware
+app.use((req, res, next) => {
+    const start = Date.now();
+    
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        const logData = {
+            method: req.method,
+            path: req.originalUrl,
+            status: res.statusCode,
+            duration: `${duration}ms`,
+            ip: req.ip || req.connection?.remoteAddress
+        };
+        
+        if (res.statusCode >= 400) {
+            logger.warn('Request failed', logData);
+        } else {
+            logger.info('Request', logData);
+        }
+    });
+    
+    next();
+});
+
+// Apply general rate limiting to all API routes
+app.use('/api', generalRateLimiter);
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
 
-// Check if member exists
-app.get('/api/member/exists', async (req, res) => {
+// Use route files
+app.use('/api/member', memberRoutes);
+app.use('/api/login', authRoutes);
+app.use('/api/products', productsRoutes);
+app.use('/api/purchase', paymentRoutes);
+app.use('/api/orders', ordersRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Check if member exists endpoint
+app.get('/api/check-member', async (req, res) => {
     const { email } = req.query;
     
     if (!email) {
@@ -394,8 +484,6 @@ app.get('/api/member/exists', async (req, res) => {
     }
     
     try {
-        const fetch = (await import('node-fetch')).default;
-        
         const url = `${GYM_MASTER_CONFIG.baseUrl}/api/v2/member/exists?api_key=${GYM_MASTER_CONFIG.apiKey}&companyId=${GYM_MASTER_CONFIG.companyId}&email=${encodeURIComponent(email)}`;
         
         console.log('Checking if member exists:', email);
@@ -429,7 +517,7 @@ app.post('/api/prospect/create', async (req, res) => {
     }
     
     try {
-        const fetch = (await import('node-fetch')).default;
+
         
         const formData = new URLSearchParams();
         formData.append('api_key', GYM_MASTER_CONFIG.apiKey);
@@ -530,7 +618,7 @@ app.post('/api/member/profile/update', async (req, res) => {
     }
     
     try {
-        const fetch = (await import('node-fetch')).default;
+
         
         const formData = new URLSearchParams();
         formData.append('api_key', GYM_MASTER_CONFIG.apiKey);
@@ -611,7 +699,7 @@ app.post('/api/login', async (req, res) => {
     
     try {
         // Dynamic import for node-fetch (ESM module)
-        const fetch = (await import('node-fetch')).default;
+
         
         const formData = new URLSearchParams();
         formData.append('api_key', GYM_MASTER_CONFIG.apiKey);
@@ -697,140 +785,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Get products endpoint
-app.get('/api/products', async (req, res) => {
-    try {
-        const fetch = (await import('node-fetch')).default;
-        
-        const url = `${GYM_MASTER_CONFIG.baseUrl}/api/v2/products?api_key=${GYM_MASTER_CONFIG.apiKey}&companyId=${GYM_MASTER_CONFIG.companyId}`;
-        
-        console.log('Fetching products...');
-        
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        console.log('Products API response status:', response.status);
-        console.log('Products API full first product:', JSON.stringify(data.result[0], null, 2));
-        console.log('Products count:', data.result ? data.result.length : 0);
-        
-        if (!response.ok) {
-            return res.status(response.status).json({ 
-                success: false, 
-                error: data.error || 'Failed to fetch products' 
-            });
-        }
-        
-        // Filter out delivery and pickup products (730312 and 730313)
-        const DELIVERY_PICKUP_PRODUCTS = [730312, 730313];
-        const filteredProducts = (data.result || data).filter(product => {
-            return !DELIVERY_PICKUP_PRODUCTS.includes(parseInt(product.productid));
-        });
-        
-        console.log('Filtered products count:', filteredProducts.length);
-        console.log('Hidden delivery/pickup products: 730312, 730313');
-        
-        res.json({ 
-            success: true, 
-            products: filteredProducts
-        });
-        
-    } catch (error) {
-        console.error('Products fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Server error fetching products' 
-        });
-    }
-});
-
-// Check stock availability endpoint
-app.post('/api/products/check-stock', async (req, res) => {
-    try {
-        const { items } = req.body;
-        
-        if (!items || !Array.isArray(items)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Items array is required'
-            });
-        }
-        
-        const fetch = (await import('node-fetch')).default;
-        
-        // Fetch current product stock from Gym Master
-        const url = `${GYM_MASTER_CONFIG.baseUrl}/api/v2/products?api_key=${GYM_MASTER_CONFIG.apiKey}&companyId=${GYM_MASTER_CONFIG.companyId}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (!response.ok || !data.result) {
-            return res.status(500).json({
-                success: false,
-                error: 'Failed to fetch product stock'
-            });
-        }
-        
-        const products = data.result;
-        const outOfStock = [];
-        const insufficient = [];
-        
-        // Check each item against current stock
-        for (const item of items) {
-            const product = products.find(p => p.productid == item.productId || p.id == item.productId);
-            
-            if (!product) {
-                outOfStock.push({
-                    productId: item.productId,
-                    name: item.name || 'Unknown Product',
-                    requested: item.quantity,
-                    available: 0
-                });
-                continue;
-            }
-            
-            const availableStock = product.maxquantity || 0;
-            
-            if (availableStock === 0) {
-                outOfStock.push({
-                    productId: item.productId,
-                    name: product.name,
-                    requested: item.quantity,
-                    available: 0
-                });
-            } else if (item.quantity > availableStock) {
-                insufficient.push({
-                    productId: item.productId,
-                    name: product.name,
-                    requested: item.quantity,
-                    available: availableStock
-                });
-            }
-        }
-        
-        // If any issues found, return error
-        if (outOfStock.length > 0 || insufficient.length > 0) {
-            return res.json({
-                success: false,
-                outOfStock: outOfStock,
-                insufficient: insufficient,
-                message: 'Stock availability issues detected'
-            });
-        }
-        
-        // All items are in stock
-        res.json({
-            success: true,
-            message: 'All items are available'
-        });
-        
-    } catch (error) {
-        console.error('Stock check error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Server error checking stock'
-        });
-    }
-});
-
 // Purchase products endpoint
 app.post('/api/purchase', async (req, res) => {
     const { token, items, customer, deliveryMethod, deliveryAddress, notes } = req.body;
@@ -843,7 +797,7 @@ app.post('/api/purchase', async (req, res) => {
     }
     
     try {
-        const fetch = (await import('node-fetch')).default;
+
         
         // Format products as array of objects with id and quantity
         const products = items.map(item => ({
@@ -942,7 +896,7 @@ app.get('/api/verify-payment/:reference', async (req, res) => {
     }
     
     try {
-        const fetch = (await import('node-fetch')).default;
+
         
         console.log('Verifying payment for reference:', reference);
         
@@ -1035,89 +989,16 @@ app.get('/api/verify-payment/:reference', async (req, res) => {
 // Store orders in memory (in production, use a database)
 // Orders now loaded from file at startup - see top of file
 
-// Get all orders
-app.get('/api/orders', async (req, res) => {
-    console.log('GET /api/orders request received');
-    try {
-        const orders = await loadOrdersFromDB();
-        
-        // Map database fields to frontend expected format
-        const mappedOrders = orders.map(order => ({
-            orderId: order.id,
-            customer: {
-                name: order.customerName,
-                email: order.customerEmail,
-                phone: order.customerPhone
-            },
-            items: order.items,
-            deliveryMethod: order.deliveryMethod,
-            deliveryAddress: order.deliveryAddress,
-            subtotal: order.subtotal,
-            deliveryFee: order.deliveryFee,
-            total: order.total,
-            notes: order.notes,
-            timestamp: order.createdAt,
-            paymentStatus: order.paymentStatus,
-            deliveryStatus: order.status || 'pending',
-            paidAt: order.paidAt
-        }));
-        
-        res.json({
-            success: true,
-            orders: mappedOrders,
-            count: mappedOrders.length
-        });
-    } catch (error) {
-        console.error('Error in GET /api/orders:', error);
-        res.status(500).json({ success: false, error: 'Failed to fetch orders' });
-    }
-});
-
-// Track order by reference (public endpoint)
-app.get('/api/orders/track/:reference', async (req, res) => {
-    const { reference } = req.params;
-    console.log(`Tracking order: ${reference}`);
-    
-    try {
-        const order = await OrderDB.getById(reference);
-        
-        if (order) {
-            // Return order info (excluding sensitive admin data)
-            res.json({
-                success: true,
-                order: {
-                    orderId: order.id,
-                    customer: {
-                        name: order.customerName,
-                        email: order.customerEmail,
-                        phone: order.customerPhone
-                    },
-                    items: order.items,
-                    deliveryMethod: order.deliveryMethod,
-                    deliveryAddress: order.deliveryAddress,
-                    subtotal: order.subtotal,
-                    deliveryFee: order.deliveryFee,
-                    total: order.total,
-                    timestamp: order.createdAt,
-                    paymentStatus: order.paymentStatus,
-                    deliveryStatus: order.status || 'pending',
-                    paidAt: order.paidAt
-                }
-            });
-        } else {
-            res.json({
-                success: false,
-                message: 'Order not found. Please check your reference number.'
-            });
-        }
-    } catch (error) {
-        console.error('Error in track order:', error);
-        res.status(500).json({ success: false, error: 'Server error tracking order' });
-    }
-});
-
 // Update order delivery status (admin only)
-app.patch('/api/orders/:orderId/status', async (req, res) => {
+app.patch('/api/orders/:orderId/status', [
+    param('orderId').trim().escape().notEmpty().withMessage('Order ID is required'),
+    body('deliveryStatus').isIn(['pending', 'paid', 'processing', 'shipped', 'delivered']).withMessage('Invalid delivery status'),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
     const { orderId } = req.params;
     const { deliveryStatus } = req.body;
     
@@ -1241,50 +1122,116 @@ app.get('/api/test-email', async (req, res) => {
     }
 });
 
+// Admin login with password (rate limited)
+app.post('/api/admin/login', loginRateLimiter, [
+    body('password').trim().notEmpty().withMessage('Password is required'),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
+    const { password } = req.body;
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ActiveZone@2026';
+    
+    if (password === ADMIN_PASSWORD) {
+        res.json({ success: true, message: 'Login successful' });
+    } else {
+        res.status(401).json({ success: false, error: 'Invalid password' });
+    }
+});
+
 // TOTP Setup endpoint - Display QR code for Google Authenticator
 app.get('/api/totp/setup', async (req, res) => {
     try {
-        const otpauthUrl = speakeasy.otpauthURL({
-            secret: TOTP_SECRET,
-            label: 'Active Zone Hub',
+        const otpauthUrlLogin = speakeasy.otpauthURL({
+            secret: TOTP_SECRET_ADMIN,
+            label: 'Active Zone Hub - Admin Login',
             issuer: 'Active Zone Hub',
             encoding: 'base32'
         });
         
-        const qrCodeDataURL = await QRCode.toDataURL(otpauthUrl);
+        const otpauthUrlDelete = speakeasy.otpauthURL({
+            secret: TOTP_SECRET,
+            label: 'Active Zone Hub - Order Delete',
+            issuer: 'Active Zone Hub',
+            encoding: 'base32'
+        });
+        
+        const qrCodeLogin = await QRCode.toDataURL(otpauthUrlLogin, { 
+            width: 300,
+            margin: 2,
+            color: { dark: '#1a1a1a', light: '#ffffff' }
+        });
+        const qrCodeDelete = await QRCode.toDataURL(otpauthUrlDelete, { 
+            width: 300,
+            margin: 2,
+            color: { dark: '#1a1a1a', light: '#ffffff' }
+        });
         
         res.send(`
             <!DOCTYPE html>
             <html>
             <head>
                 <title>Google Authenticator Setup</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <style>
-                    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
-                    h1 { color: #e53935; }
-                    .qr-code { margin: 30px 0; }
-                    .secret { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; font-family: monospace; font-size: 18px; }
-                    .instructions { text-align: left; line-height: 1.8; }
-                    .step { margin: 15px 0; }
+                    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; text-align: center; background: #f5f5f5; }
+                    h1 { color: #e53935; margin-bottom: 30px; }
+                    h2 { color: #333; margin-top: 0; }
+                    .qr-section { background: #fff; padding: 30px; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .qr-code { margin: 20px 0; text-align: center; }
+                    .qr-code img { width: 250px; height: 250px; border: 3px solid #e53935; border-radius: 8px; padding: 10px; background: #fff; }
+                    .secret { background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 15px 0; font-family: monospace; font-size: 18px; border: 2px dashed #ccc; word-break: break-all; letter-spacing: 2px; }
+                    .instructions { text-align: left; line-height: 2; background: #fff; padding: 25px; border-radius: 12px; margin-top: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .step { margin: 10px 0; padding-left: 30px; position: relative; }
+                    .step::before { content: counter(step); counter-increment: step; position: absolute; left: 0; width: 22px; height: 22px; background: #e53935; color: #fff; border-radius: 50%; text-align: center; line-height: 22px; font-size: 12px; font-weight: bold; }
+                    .instructions { counter-reset: step; }
+                    .note { background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 14px; border-left: 4px solid #ffc107; }
+                    .account-type { display: inline-block; background: #e53935; color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 12px; margin-bottom: 10px; }
+                    .copy-btn { background: #e53935; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 10px; }
+                    .copy-btn:hover { background: #c62828; }
                 </style>
             </head>
             <body>
                 <h1>🔒 Google Authenticator Setup</h1>
-                <p>Scan this QR code with Google Authenticator app:</p>
-                <div class="qr-code">
-                    <img src="${qrCodeDataURL}" alt="QR Code" />
+                
+                <div class="qr-section">
+                    <span class="account-type">ADMIN LOGIN</span>
+                    <h2>📱 Admin Login Code</h2>
+                    <p>Use this to log into the Orders Admin page</p>
+                    <div class="qr-code">
+                        <img src="${qrCodeLogin}" alt="QR Code for Login" />
+                    </div>
+                    <p><strong>Or enter manually in the app:</strong></p>
+                    <div class="secret">${TOTP_SECRET_ADMIN}</div>
+                    <button class="copy-btn" onclick="navigator.clipboard.writeText('${TOTP_SECRET_ADMIN}').then(() => alert('Secret copied!'))">📋 Copy Secret</button>
                 </div>
-                <p>Or manually enter this secret:</p>
-                <div class="secret">${TOTP_SECRET}</div>
+                
+                <div class="qr-section">
+                    <span class="account-type" style="background: #ff9800;">ORDER DELETE</span>
+                    <h2>🗑️ Delete Orders Code</h2>
+                    <p>Use this to delete unpaid orders</p>
+                    <div class="qr-code">
+                        <img src="${qrCodeDelete}" alt="QR Code for Delete" />
+                    </div>
+                    <p><strong>Or enter manually in the app:</strong></p>
+                    <div class="secret">${TOTP_SECRET}</div>
+                    <button class="copy-btn" onclick="navigator.clipboard.writeText('${TOTP_SECRET}').then(() => alert('Secret copied!'))">📋 Copy Secret</button>
+                </div>
+                
                 <div class="instructions">
-                    <h3>Instructions:</h3>
-                    <div class="step">1. Download Google Authenticator app on your phone</div>
-                    <div class="step">2. Scan the QR code above OR enter the secret manually</div>
-                    <div class="step">3. The app will generate 6-digit codes every 30 seconds</div>
-                    <div class="step">4. Use these codes to delete unpaid orders</div>
+                    <h3>📋 Setup Instructions:</h3>
+                    <div class="step">Download Google Authenticator (or Microsoft/Authy) from your app store</div>
+                    <div class="step">Open the app and tap "+" or "Add account"</div>
+                    <div class="step">Scan the QR code OR tap "Enter a setup key" and paste the secret</div>
+                    <div class="step">Repeat for BOTH codes above (they are separate accounts)</div>
+                    <div class="step">Use the Admin Login code to access orders.html</div>
                 </div>
-                <p style="margin-top: 30px; color: #666; font-size: 12px;">
-                    ⚠️ Keep this secret secure! Anyone with access can delete orders.
-                </p>
+                
+                <div class="note">
+                    ⚠️ <strong>Important:</strong> These are TWO separate accounts in your authenticator app. Save both secrets securely - you'll need them to regain access if you change phones.
+                </div>
             </body>
             </html>
         `);
@@ -1295,7 +1242,7 @@ app.get('/api/totp/setup', async (req, res) => {
 });
 
 // Delete order endpoint with TOTP verification
-app.delete('/api/orders/:orderId', async (req, res) => {
+app.delete('/api/orders/:orderId', deleteRateLimiter, async (req, res) => {
     const { orderId } = req.params;
     const totpCode = req.headers['x-totp-code'];
     
@@ -1441,7 +1388,7 @@ async function sendOrderConfirmationEmail(customerEmail, orderDetails) {
         </div>
         
         <div class="content">
-            <p>Dear <strong>${orderDetails.customer.name}</strong>,</p>
+            <p>Dear <strong>${orderDetails.customer?.name || orderDetails.customerName || 'Valued Customer'}</strong>,</p>
             <p>Thank you for your order at Active Zone Hub! Your order has been received and payment confirmed.</p>
             
             <div class="order-details">
@@ -1453,32 +1400,32 @@ async function sendOrderConfirmationEmail(customerEmail, orderDetails) {
                     </tr>
                     <tr>
                         <td class="label">Order Date:</td>
-                        <td style="color: #333333;">${new Date(orderDetails.timestamp).toLocaleString('en-NG', { dateStyle: 'full', timeStyle: 'short' })}</td>
+                        <td style="color: #333333;">${new Date(orderDetails.timestamp || orderDetails.createdAt).toLocaleString('en-NG', { dateStyle: 'full', timeStyle: 'short' })}</td>
                     </tr>
                     <tr>
                         <td class="label">Total Amount:</td>
-                        <td><strong style="color: #e53935;">₦${orderDetails.total.toLocaleString()}</strong></td>
+                        <td><strong style="color: #e53935;">₦${(orderDetails.total || 0).toLocaleString()}</strong></td>
                     </tr>
                 </table>
                 
                 <h3 style="margin-top: 20px;">Items Ordered:</h3>
                 <ul class="items">
-                    ${orderDetails.items.map(item => `
+                    ${(orderDetails.items || []).map(item => `
                         <li>
                             <strong style="color: #1a1a1a;">${item.name}</strong><br>
-                            <span style="color: #666;">Qty: ${item.quantity} × ₦${item.price.toLocaleString()} = ₦${(item.price * item.quantity).toLocaleString()}</span>
+                            <span style="color: #666;">Qty: ${item.quantity} × ₦${(item.price || 0).toLocaleString()} = ₦${((item.price || 0) * item.quantity).toLocaleString()}</span>
                         </li>
                     `).join('')}
                 </ul>
                 
                 <h3>🚚 Delivery Information:</h3>
-                ${orderDetails.deliveryMethod === 'delivery' ? `
+                ${orderDetails.deliveryMethod === 'delivery' && orderDetails.deliveryAddress ? `
                     <p style="color: #333333;">
                         <strong style="color: #1a1a1a;">Delivery Address:</strong><br>
-                        ${orderDetails.deliveryAddress.street}<br>
-                        ${orderDetails.deliveryAddress.city}, ${orderDetails.deliveryAddress.state}
+                        ${orderDetails.deliveryAddress?.street || 'N/A'}<br>
+                        ${orderDetails.deliveryAddress?.city || 'N/A'}, ${orderDetails.deliveryAddress?.state || 'N/A'}
                     </p>
-                    <p style="color: #333333;"><strong style="color: #1a1a1a;">Delivery Fee:</strong> ₦${orderDetails.deliveryFee.toLocaleString()}</p>
+                    <p style="color: #333333;"><strong style="color: #1a1a1a;">Delivery Fee:</strong> ₦${(orderDetails.deliveryFee || 0).toLocaleString()}</p>
                 ` : '<p style="color: #333333;"><strong style="color: #1a1a1a;">Pickup from Store</strong></p>'}
             </div>
             
@@ -1505,25 +1452,25 @@ async function sendOrderConfirmationEmail(customerEmail, orderDetails) {
         
         // Plain text version for email clients that don't support HTML
         const emailText = `
-Dear ${orderDetails.customer.name},
+Dear ${orderDetails.customer?.name || orderDetails.customerName || 'Valued Customer'},
 
 Thank you for your order at Active Zone Hub!
 
 Your Order Details:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Order Reference: ${orderDetails.orderId}
-Order Date: ${new Date(orderDetails.timestamp).toLocaleString()}
-Total Amount: ₦${orderDetails.total.toLocaleString()}
+Order Date: ${new Date(orderDetails.timestamp || orderDetails.createdAt).toLocaleString()}
+Total Amount: ₦${(orderDetails.total || 0).toLocaleString()}
 
 Items Ordered:
-${orderDetails.items.map(item => `• ${item.name} (Qty: ${item.quantity}) - ₦${(item.price * item.quantity).toLocaleString()}`).join('\n')}
+${(orderDetails.items || []).map(item => `• ${item.name} (Qty: ${item.quantity}) - ₦${((item.price || 0) * item.quantity).toLocaleString()}`).join('\n')}
 
 Delivery Information:
-${orderDetails.deliveryMethod === 'delivery' ? 
+${orderDetails.deliveryMethod === 'delivery' && orderDetails.deliveryAddress ? 
 `Delivery Address:
-${orderDetails.deliveryAddress.street}
-${orderDetails.deliveryAddress.city}, ${orderDetails.deliveryAddress.state}
-Delivery Fee: ₦${orderDetails.deliveryFee.toLocaleString()}` : 
+${orderDetails.deliveryAddress?.street || 'N/A'}
+${orderDetails.deliveryAddress?.city || 'N/A'}, ${orderDetails.deliveryAddress?.state || 'N/A'}
+Delivery Fee: ₦${(orderDetails.deliveryFee || 0).toLocaleString()}` : 
 'Pickup from Store'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1700,7 +1647,7 @@ async function sendStatusUpdateEmail(customerEmail, orderDetails, newStatus) {
         </div>
         
         <div class="content">
-            <p>Dear <strong>${orderDetails.customer.name}</strong>,</p>
+            <p>Dear <strong>${orderDetails.customer?.name || orderDetails.customerName || 'Valued Customer'}</strong>,</p>
             <p><strong>${content.message}</strong></p>
             <p>${content.description}</p>
             
@@ -1717,11 +1664,11 @@ async function sendStatusUpdateEmail(customerEmail, orderDetails, newStatus) {
                     </tr>
                     <tr>
                         <td class="label">Order Date:</td>
-                        <td style="color: #333333;">${new Date(orderDetails.timestamp).toLocaleString('en-NG', { dateStyle: 'full', timeStyle: 'short' })}</td>
+                        <td style="color: #333333;">${new Date(orderDetails.timestamp || orderDetails.createdAt).toLocaleString('en-NG', { dateStyle: 'full', timeStyle: 'short' })}</td>
                     </tr>
                     <tr>
                         <td class="label">Total Amount:</td>
-                        <td><strong style="color: #e53935;">₦${orderDetails.total.toLocaleString()}</strong></td>
+                        <td><strong style="color: #e53935;">₦${(orderDetails.total || 0).toLocaleString()}</strong></td>
                     </tr>
                     <tr>
                         <td class="label">Delivery Method:</td>
@@ -1750,7 +1697,7 @@ async function sendStatusUpdateEmail(customerEmail, orderDetails, newStatus) {
         
         // Plain text version
         const emailText = `
-Dear ${orderDetails.customer.name},
+Dear ${orderDetails.customer?.name || orderDetails.customerName || 'Valued Customer'},
 
 ${content.title.replace(/[📦🚚🎉]/g, '').trim()}
 
@@ -1763,8 +1710,8 @@ ${content.nextStep}
 
 Your Order Details:
 Order Reference: ${orderDetails.orderId}
-Order Date: ${new Date(orderDetails.timestamp).toLocaleString()}
-Total Amount: ₦${orderDetails.total.toLocaleString()}
+Order Date: ${new Date(orderDetails.timestamp || orderDetails.createdAt).toLocaleString()}
+Total Amount: ₦${(orderDetails.total || 0).toLocaleString()}
 Delivery Method: ${orderDetails.deliveryMethod === 'delivery' ? 'Home Delivery' : 'Pickup from Store'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1844,7 +1791,19 @@ Active Zone Hub Team
 }
 
 // Create order endpoint with Gym Master purchase integration
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', [
+    body('customer').isObject().withMessage('Customer must be an object'),
+    body('customer.name').trim().escape().notEmpty().withMessage('Customer name is required'),
+    body('customer.email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('items').isArray({ min: 1 }).withMessage('At least one item is required'),
+    body('deliveryMethod').optional().isIn(['delivery', 'pickup']).withMessage('Invalid delivery method'),
+    body('total').isFloat({ min: 0 }).withMessage('Total must be a positive number'),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
     const { token, customer, items, deliveryMethod, deliveryAddress, subtotal, deliveryFee, total, notes } = req.body;
     
     // Validate required fields
@@ -1883,7 +1842,7 @@ app.post('/api/orders', async (req, res) => {
         console.log('Timestamp:', new Date().toISOString());
         console.log('='.repeat(50));
         
-        const fetch = (await import('node-fetch')).default;
+
         
         // Step 1: Call Gym Master Purchase API
         console.log('📦 Calling Gym Master Purchase API...');
@@ -2090,15 +2049,44 @@ app.get('/{*path}', (req, res) => {
 
 // Global error handler - returns JSON instead of HTML
 app.use((err, req, res, next) => {
-    console.error('Server error:', err.message);
+    logger.error('Server error', {
+        message: err.message,
+        path: req.path,
+        method: req.method,
+        stack: err.stack
+    });
+    
+    // Handle specific error types
+    if (err.name === 'ValidationError') {
+        return res.status(400).json({ success: false, error: err.message });
+    }
+    if (err.name === 'CastError') {
+        return res.status(400).json({ success: false, error: 'Invalid ID format' });
+    }
+    
     res.status(500).json({
         success: false,
-        error: err.message || 'Internal server error'
+        error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
     });
 });
 
+// 404 handler for unmatched routes
+app.use((req, res) => {
+    res.status(404).json({ success: false, error: 'Endpoint not found' });
+});
+
 // Contact form endpoint - Send message via email
-app.post('/api/contact', async (req, res) => {
+app.post('/api/contact', [
+    body('name').trim().escape().notEmpty().withMessage('Name is required'),
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('message').trim().escape().notEmpty().withMessage('Message is required'),
+    body('phone').optional().trim(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
     const { name, email, phone, message } = req.body;
     
     // Validate required fields
@@ -2301,17 +2289,54 @@ To respond, simply reply to this email.
     }
 });
 
-// Start server - bind to 0.0.0.0 for Railway/Render compatibility
-app.listen(PORT, '0.0.0.0', () => {
-    console.log('='.repeat(50));
-    console.log('Active Zone Hub - Backend Server');
-    console.log('='.repeat(50));
-    console.log(`Server running on port ${PORT}`);
-    console.log('API Endpoints:');
-    console.log(`  GET  /api/health    - Health check`);
-    console.log(`  POST /api/login     - Member login`);
-    console.log(`  GET  /api/products  - Get products`);
-    console.log(`  POST /api/purchase  - Purchase products`);
-    console.log(`  POST /api/orders    - Create order`);
-    console.log('='.repeat(50));
-});
+// Export app for serverless (Vercel)
+module.exports = app;
+
+// Only start server if running directly (not in serverless environment)
+if (require.main === module) {
+    const http = require('http');
+    const https = require('https');
+
+    // Force HTTPS in production
+    if (process.env.NODE_ENV === 'production') {
+        app.use((req, res, next) => {
+            if (!req.secure && req.get('X-Forwarded-Proto') !== 'https') {
+                return res.redirect('https://' + req.get('host') + req.url);
+            }
+            next();
+        });
+    }
+
+    // Create HTTP server
+    const httpServer = http.createServer(app);
+
+    // Check for SSL certificates
+    const SSL_KEY_PATH = process.env.SSL_KEY_PATH;
+    const SSL_CERT_PATH = process.env.SSL_CERT_PATH;
+
+    if (SSL_KEY_PATH && SSL_CERT_PATH && fs.existsSync(SSL_KEY_PATH) && fs.existsSync(SSL_CERT_PATH)) {
+        const httpsOptions = {
+            key: fs.readFileSync(SSL_KEY_PATH),
+            cert: fs.readFileSync(SSL_CERT_PATH)
+        };
+        
+        const httpsServer = https.createServer(httpsOptions, app);
+        
+        httpsServer.listen(PORT, '0.0.0.0', () => {
+            logger.info(`HTTPS Server running on port ${PORT}`);
+            logger.info('SSL/TLS enabled');
+        });
+        
+        // Redirect HTTP to HTTPS
+        httpServer.listen(80, '0.0.0.0', () => {
+            logger.info('HTTP Server running - redirecting to HTTPS');
+        });
+    } else {
+        httpServer.listen(PORT, '0.0.0.0', () => {
+            if (process.env.NODE_ENV === 'production') {
+                logger.warn('Running in production without HTTPS! Set SSL_KEY_PATH and SSL_CERT_PATH for secure connections');
+            }
+            logger.info(`HTTP Server running on port ${PORT}`);
+        });
+    }
+}
