@@ -235,81 +235,121 @@ document.addEventListener('DOMContentLoaded', function () {
     fetchAndRenderProducts();
 });
 
+// Flag to track if filter delegation is set up
+let filterDelegationSetup = false;
+
 function setupFilters() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-
-    console.log('Setting up filters - Buttons:', filterButtons.length);
-
-    if (filterButtons.length === 0) {
-        console.error('No filter buttons found!');
+    // Only set up once using event delegation
+    if (filterDelegationSetup) {
+        console.log('Filter delegation already set up');
         return;
     }
+    
+    console.log('Setting up filter event delegation');
+    
+    // Use event delegation for filter buttons
+    document.addEventListener('click', function(e) {
+        const filterBtn = e.target.closest('.filter-btn');
+        
+        if (!filterBtn) return;
+        
+        console.log('Filter button clicked!');
+        
+        // Update active button
+        const allFilterBtns = document.querySelectorAll('.filter-btn');
+        allFilterBtns.forEach(btn => btn.classList.remove('active'));
+        filterBtn.classList.add('active');
 
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            console.log('Filter button clicked!');
+        const category = filterBtn.getAttribute('data-category');
+        console.log('Filter clicked:', category);
+        
+        const productCards = document.querySelectorAll('.product-card');
+        let visibleCount = 0;
 
-            // Update active button
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
+        // Filter products
+        productCards.forEach(card => {
+            const cardCategory = card.getAttribute('data-category');
 
-            const category = this.getAttribute('data-category');
-            console.log('Filter clicked:', category);
-            
-            const productCards = document.querySelectorAll('.product-card');
-            let visibleCount = 0;
-
-            // Filter products
-            productCards.forEach(card => {
-                const cardCategory = card.getAttribute('data-category');
-                console.log('Card category:', cardCategory, '| Filter:', category);
-
-                if (category === 'all' || cardCategory === category) {
-                    card.classList.remove('hidden');
-                    visibleCount++;
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-
-            console.log('Products visible:', visibleCount);
+            if (category === 'all' || cardCategory === category) {
+                card.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                card.classList.add('hidden');
+            }
         });
+
+        console.log('Products visible:', visibleCount);
     });
+    
+    filterDelegationSetup = true;
+    console.log('Filter event delegation set up successfully');
 }
 
+// Flag to track if event delegation is already set up
+let delegationSetup = false;
+
 function attachAddToCartListeners() {
-    const addToCartButtons = document.querySelectorAll('.btn-add-to-cart');
-
-    addToCartButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const productCard = this.closest('.product-card');
-            
-            // Get product ID and stock level
-            const productId = this.getAttribute('data-product-id');
-            const productLink = this.getAttribute('data-link');
-            const stockLevel = parseInt(this.getAttribute('data-stock'));
-            
-            // If it has a data-link attribute, it's an external link, not for cart
-            if (productLink) {
-                // Open external link in new tab
-                window.open(productLink, '_blank');
-                return;
-            }
-            
-            if (!productId) {
-                console.error('No product ID found for this product');
-                return;
-            }
-            
-            const product = {
-                productId: productId,
-                name: productCard.querySelector('h3').textContent,
-                price: parseFloat(productCard.querySelector('.product-price').textContent.replace('₦', '').replace(',', '')),
-                image: productCard.querySelector('.product-image').style.backgroundImage.slice(5, -2),
-                maxStock: stockLevel
-            };
-
-            cart.addItem(product);
-        });
+    // Only set up delegation once
+    if (delegationSetup) {
+        console.log('Event delegation already set up, skipping');
+        return;
+    }
+    
+    // Use event delegation on document for better reliability
+    // This works for both static and dynamically added products
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('.btn-add-to-cart');
+        
+        if (!button) return;
+        
+        e.preventDefault();
+        
+        const productCard = button.closest('.product-card');
+        
+        if (!productCard) {
+            console.error('Product card not found');
+            return;
+        }
+        
+        // Get product ID
+        const productId = button.getAttribute('data-product-id');
+        const productLink = button.getAttribute('data-link');
+        const stockLevel = parseInt(button.getAttribute('data-stock')) || 999;
+        
+        // If it has a data-link attribute, it's an external link, not for cart
+        if (productLink) {
+            // Open external link in new tab
+            window.open(productLink, '_blank');
+            return;
+        }
+        
+        if (!productId) {
+            console.error('No product ID found for this product');
+            return;
+        }
+        
+        // Get product details from the card
+        const nameElement = productCard.querySelector('h3');
+        const priceElement = productCard.querySelector('.product-price');
+        const imageElement = productCard.querySelector('.product-image');
+        
+        if (!nameElement || !priceElement || !imageElement) {
+            console.error('Missing product details');
+            return;
+        }
+        
+        const product = {
+            productId: productId,
+            name: nameElement.textContent,
+            price: parseFloat(priceElement.textContent.replace('₦', '').replace(/,/g, '')),
+            image: imageElement.style.backgroundImage.slice(5, -2),
+            maxStock: stockLevel
+        };
+        
+        console.log('Adding to cart:', product);
+        cart.addItem(product);
     });
+    
+    delegationSetup = true;
+    console.log('Cart event listeners attached via delegation');
 }

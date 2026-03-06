@@ -1,9 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path');
-const fs = require('fs');
-
-const PRODUCTS_FILE = path.join(__dirname, '../../../products-data.json');
 
 const GYM_MASTER_CONFIG = {
     apiKey: process.env.GYM_MASTER_API_KEY,
@@ -11,57 +7,58 @@ const GYM_MASTER_CONFIG = {
     companyId: process.env.GYM_MASTER_COMPANY_ID
 };
 
-function loadProducts() {
-    try {
-        if (fs.existsSync(PRODUCTS_FILE)) {
-            const data = fs.readFileSync(PRODUCTS_FILE, 'utf8');
-            return JSON.parse(data);
-        }
-        return [];
-    } catch (error) {
-        console.error('Error loading products:', error.message);
-        return [];
-    }
-}
+// In-memory cache for products (refreshed on each request in serverless)
+let productsCache = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 
-function saveProducts(products) {
-    try {
-        fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), 'utf8');
-        return true;
-    } catch (error) {
-        console.error('Error saving products:', error.message);
-        return false;
+async function fetchProductsFromGymMaster() {
+    if (!GYM_MASTER_CONFIG.apiKey || !GYM_MASTER_CONFIG.baseUrl) {
+        console.log('Gym Master API credentials not configured');
+        return [];
     }
+    
+    try {
+        const url = `${GYM_MASTER_CONFIG.baseUrl}/api/v2/products?api_key=${GYM_MASTER_CONFIG.apiKey}&companyId=${GYM_MASTER_CONFIG.companyId}`;
+        
+        const response = await fetch(url, {
+            timeout: 10000
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            let products = data.result || [];
+            
+            // Filter out delivery/pickup products
+            const DELIVERY_PICKUP = [730312, 730313];
+            products = products.filter(p => !DELIVERY_PICKUP.includes(parseInt(p.productid)));
+            
+            console.log(`Fetched ${products.length} products from Gym Master API`);
+            return products;
+        }
+    } catch (error) {
+        console.error('Gym Master API error:', error.message);
+    }
+    return [];
 }
 
 router.get('/', async (req, res) => {
     try {
-        let products = loadProducts();
-        
-        // If no local products, try fetching from Gym Master
-        if (!products || products.length === 0) {
-            try {
-                const url = `${GYM_MASTER_CONFIG.baseUrl}/api/v2/products?api_key=${GYM_MASTER_CONFIG.apiKey}&companyId=${GYM_MASTER_CONFIG.companyId}`;
-                
-                const response = await fetch(url);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    products = data.result || [];
-                    
-                    // Filter out delivery/pickup products
-                    const DELIVERY_PICKUP = [730312, 730313];
-                    products = products.filter(p => !DELIVERY_PICKUP.includes(parseInt(p.productid)));
-                    
-                    // Save to local file for caching
-                    saveProducts(products);
-                }
-            } catch (apiError) {
-                console.error('Gym Master API error:', apiError.message);
-            }
+        // Check if cache is still valid
+        const now = Date.now();
+        if (productsCache && (now - cacheTimestamp) < CACHE_TTL) {
+            console.log('Returning cached products');
+            return res.json({ success: true, products: productsCache, cached: true });
         }
         
-        res.json({ success: true, products });
+        // Fetch fresh products from Gym Master
+        const products = await fetchProductsFromGymMaster();
+        
+        // Update cache
+        productsCache = products;
+        cacheTimestamp = now;
+        
+        res.json({ success: true, products, cached: false });
     } catch (error) {
         console.error('Error fetching products:', error);
         res.status(500).json({ success: false, error: 'Failed to fetch products' });
@@ -76,18 +73,8 @@ router.post('/check-stock', async (req, res) => {
     }
 
     try {
-        let products = loadProducts();
-        
-        // If no local products, fetch from Gym Master
-        if (!products || products.length === 0) {
-            const url = `${GYM_MASTER_CONFIG.baseUrl}/api/v2/products?api_key=${GYM_MASTER_CONFIG.apiKey}&companyId=${GYM_MASTER_CONFIG.companyId}`;
-            const response = await fetch(url);
-            
-            if (response.ok) {
-                const data = await response.json();
-                products = data.result || [];
-            }
-        }
+        // Fetch products from cache or Gym Master
+        const products = productsCache || await fetchProductsFromGymMaster();
         
         const results = items.map(item => {
             const product = products.find(p => p.id === item.id || p.productid === item.id);
