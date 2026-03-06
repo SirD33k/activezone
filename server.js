@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const mysql = require('mysql2/promise');
+const { MongoClient, ObjectId } = require('mongodb');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const brevo = require('@getbrevo/brevo');
@@ -102,124 +102,76 @@ async function getOrderFromFile(orderId) {
     }
 }
 
-// MySQL Database Configuration (Planetscale/Railway/Local)
-// Only create pool if DATABASE_ENABLED=true and credentials are provided
-let pool = null;
-const USE_DB = process.env.DATABASE_ENABLED === 'true' && process.env.DB_HOST && process.env.DB_USER;
+// MongoDB Database Configuration
+// Connect to MongoDB Atlas if DATABASE_ENABLED=true and MONGODB_URI is provided
+let mongoClient = null;
+let db = null;
+const USE_DB = process.env.DATABASE_ENABLED === 'true' && process.env.MONGODB_URI;
 
 if (USE_DB) {
-    const dbConfig = {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT || 3306,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD || '',
-        database: process.env.DB_NAME,
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0,
-        enableKeepAlive: true,
-        keepAliveInitialDelay: 0
-    };
-
-    // SSL configuration for cloud databases (Planetscale, Railway, etc.)
-    if (process.env.MYSQL_ATTR_SSL_MODE || process.env.DB_SSL === 'true') {
-        dbConfig.ssl = {
-            rejectUnauthorized: true
-        };
-    }
-
-    // Create the connection pool
-    pool = mysql.createPool(dbConfig);
-
-    // Test database connection on startup
-    (async () => {
-        try {
-            const connection = await pool.getConnection();
-            logger.info('MySQL connected', { host: dbConfig.host, port: dbConfig.port, database: dbConfig.database });
+    const mongoUri = process.env.MONGODB_URI;
+    const dbName = process.env.MONGODB_DB_NAME || 'activezone';
+    
+    MongoClient.connect(mongoUri, {
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 10000
+    })
+        .then(client => {
+            mongoClient = client;
+            db = client.db(dbName);
+            logger.info('MongoDB connected', { database: dbName });
             
-            // Check if orders table exists
-            const [rows] = await connection.query("SHOW TABLES LIKE 'orders'");
-            if (rows.length === 0) {
-                logger.warn('Orders table not found. Import database/schema.sql via phpMyAdmin');
-            } else {
-                logger.info('Orders table verified');
-            }
-            
-            connection.release();
-        } catch (error) {
-            logger.error('MySQL connection failed', { error: error.message });
-        }
-    })();
+            // Create indexes for better performance
+            db.collection('orders').createIndex({ id: 1 }, { unique: true });
+            db.collection('orders').createIndex({ paymentReference: 1 });
+            db.collection('orders').createIndex({ createdAt: -1 });
+        })
+        .catch(error => {
+            logger.error('MongoDB connection failed', { error: error.message });
+        });
 } else {
-    logger.info('Running in file-based mode. Set DATABASE_ENABLED=true in .env to use MySQL');
+    logger.info('Running in file-based mode. Set DATABASE_ENABLED=true and MONGODB_URI in .env to use MongoDB');
 }
 
-// Helper function to load orders from MySQL
+// Helper function to load orders from MongoDB
 async function loadOrdersFromDB() {
-    if (!USE_DB || !pool) {
+    if (!USE_DB || !db) {
         return loadOrdersFromFile();
     }
     try {
-        const [rows] = await pool.query('SELECT * FROM orders ORDER BY createdAt DESC');
-        return rows.map(row => ({
-            ...row,
-            items: JSON.parse(row.items),
-            deliveryAddress: row.deliveryAddress ? JSON.parse(row.deliveryAddress) : null
-        }));
+        const orders = await db.collection('orders')
+            .find({})
+            .sort({ createdAt: -1 })
+            .toArray();
+        return orders;
     } catch (error) {
-        console.error('Error loading orders from DB:', error.message);
+        console.error('Error loading orders from MongoDB:', error.message);
         return [];
     }
 }
 
-// Helper function to save a new order to MySQL
+// Helper function to save a new order to MongoDB
 async function saveOrderToDB(order) {
-    if (!USE_DB || !pool) {
+    if (!USE_DB || !db) {
         console.log('💾 Saving order to file storage');
         return await saveOrderToFile(order);
     }
     try {
-        const query = `
-            INSERT INTO orders (
-                id, customerName, customerEmail, customerPhone, 
-                deliveryMethod, deliveryAddress, items, subtotal, 
-                deliveryFee, total, notes, status, paymentStatus, 
-                paymentReference, gymMasterToken, gymMasterMemberId, createdAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        
-        const values = [
-            order.id,
-            order.customerName,
-            order.customerEmail,
-            order.customerPhone,
-            order.deliveryMethod,
-            JSON.stringify(order.deliveryAddress),
-            JSON.stringify(order.items),
-            order.subtotal,
-            order.deliveryFee,
-            order.total,
-            order.notes,
-            order.status || 'pending',
-            order.paymentStatus || 'pending',
-            order.paymentReference,
-            order.gymMasterToken,
-            order.gymMasterMemberId,
-            order.createdAt || new Date().toISOString()
-        ];
-
-        await pool.query(query, values);
-        console.log(`💾 Order ${order.id} saved to MySQL`);
+        await db.collection('orders').insertOne({
+            ...order,
+            createdAt: order.createdAt || new Date().toISOString()
+        });
+        console.log(`💾 Order ${order.id} saved to MongoDB`);
         return true;
     } catch (error) {
-        console.error('❌ Error saving order to MySQL:', error.message);
+        console.error('❌ Error saving order to MongoDB:', error.message);
         return false;
     }
 }
 
-// Helper function to delete an order from MySQL
+// Helper function to delete an order from MongoDB
 async function deleteOrderFromDB(orderId) {
-    if (!USE_DB || !pool) {
+    if (!USE_DB || !db) {
         // Delete from file
         try {
             const orders = loadOrdersFromFile();
@@ -236,40 +188,39 @@ async function deleteOrderFromDB(orderId) {
         }
     }
     try {
-        await pool.query('DELETE FROM orders WHERE id = ?', [orderId]);
-        console.log(`🗑️ Order ${orderId} deleted from MySQL`);
-        return true;
+        const result = await db.collection('orders').deleteOne({
+            $or: [{ id: orderId }, { paymentReference: orderId }]
+        });
+        if (result.deletedCount > 0) {
+            console.log(`🗑️ Order ${orderId} deleted from MongoDB`);
+            return true;
+        }
+        return false;
     } catch (error) {
-        console.error('❌ Error deleting order from MySQL:', error.message);
+        console.error('❌ Error deleting order from MongoDB:', error.message);
         return false;
     }
 }
 
-// Helper function to update order payment status in MySQL
+// Helper function to update order payment status in MongoDB
 async function updateOrderPaymentInDB(orderId, paymentData) {
-    if (!USE_DB || !pool) {
+    if (!USE_DB || !db) {
         console.log('💾 Updating payment status in file storage');
         return await updateOrderInFile(orderId, paymentData);
     }
     try {
-        const query = `
-            UPDATE orders 
-            SET paymentStatus = ?, status = ?, paidAt = ?
-            WHERE id = ?
-        `;
+        const result = await db.collection('orders').updateOne(
+            { $or: [{ id: orderId }, { paymentReference: orderId }] },
+            { $set: { ...paymentData, paidAt: paymentData.paidAt || new Date().toISOString() } }
+        );
         
-        const values = [
-            paymentData.paymentStatus || 'paid',
-            paymentData.status || 'paid',
-            paymentData.paidAt || new Date().toISOString(),
-            orderId
-        ];
-        
-        await pool.query(query, values);
-        console.log(`💳 Order ${orderId} payment status updated to: ${paymentData.paymentStatus}`);
-        return true;
+        if (result.modifiedCount > 0) {
+            console.log(`💳 Order ${orderId} payment status updated to: ${paymentData.paymentStatus}`);
+            return true;
+        }
+        return false;
     } catch (error) {
-        console.error('❌ Error updating order payment in MySQL:', error.message);
+        console.error('❌ Error updating order payment in MongoDB:', error.message);
         return false;
     }
 }
@@ -281,39 +232,27 @@ const OrderDB = {
     delete: deleteOrderFromDB,
     updatePayment: updateOrderPaymentInDB,
     getById: async (id) => {
-        if (!USE_DB || !pool) return await getOrderFromFile(id);
+        if (!USE_DB || !db) return await getOrderFromFile(id);
         try {
-            const [rows] = await pool.query('SELECT * FROM orders WHERE id = ?', [id]);
-            if (rows.length === 0) return null;
-            const row = rows[0];
-            return {
-                ...row,
-                items: JSON.parse(row.items),
-                deliveryAddress: row.deliveryAddress ? JSON.parse(row.deliveryAddress) : null
-            };
+            return await db.collection('orders').findOne({
+                $or: [{ id: id }, { paymentReference: id }]
+            });
         } catch (error) {
             console.error('Error in OrderDB.getById:', error.message);
             throw error;
         }
     },
     getByReference: async (reference) => {
-        if (!USE_DB || !pool) return await getOrderFromFile(reference);
+        if (!USE_DB || !db) return await getOrderFromFile(reference);
         try {
-            const [rows] = await pool.query('SELECT * FROM orders WHERE paymentReference = ?', [reference]);
-            if (rows.length === 0) return null;
-            const row = rows[0];
-            return {
-                ...row,
-                items: JSON.parse(row.items),
-                deliveryAddress: row.deliveryAddress ? JSON.parse(row.deliveryAddress) : null
-            };
+            return await db.collection('orders').findOne({ paymentReference: reference });
         } catch (error) {
             console.error('Error in OrderDB.getByReference:', error.message);
             throw error;
         }
     },
     updateStatus: async (id, status) => {
-        if (!USE_DB || !pool) {
+        if (!USE_DB || !db) {
             // Update status in file
             try {
                 const orders = loadOrdersFromFile();
@@ -332,8 +271,11 @@ const OrderDB = {
             }
         }
         try {
-            await pool.query('UPDATE orders SET status = ?, statusUpdatedAt = ? WHERE id = ?', [status, new Date().toISOString(), id]);
-            return true;
+            const result = await db.collection('orders').updateOne(
+                { $or: [{ id: id }, { paymentReference: id }] },
+                { $set: { status: status, statusUpdatedAt: new Date().toISOString() } }
+            );
+            return result.modifiedCount > 0;
         } catch (error) {
             console.error('Error in OrderDB.updateStatus:', error.message);
             throw error;
