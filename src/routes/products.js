@@ -52,6 +52,17 @@ async function fetchProductsFromGymMaster() {
 
 router.get('/', async (req, res) => {
     try {
+        // Check if API credentials are configured
+        if (!GYM_MASTER_CONFIG.apiKey || !GYM_MASTER_CONFIG.baseUrl) {
+            console.log('Gym Master API credentials not configured - returning empty products');
+            return res.json({ 
+                success: true, 
+                products: [], 
+                cached: false,
+                message: 'API credentials not configured. Please set GYM_MASTER_API_KEY, GYM_MASTER_BASE_URL, and GYM_MASTER_COMPANY_ID in Vercel environment variables.'
+            });
+        }
+        
         // Check if cache is still valid
         const now = Date.now();
         if (productsCache && (now - cacheTimestamp) < CACHE_TTL) {
@@ -69,7 +80,13 @@ router.get('/', async (req, res) => {
         res.json({ success: true, products, cached: false });
     } catch (error) {
         console.error('Error fetching products:', error);
-        res.status(500).json({ success: false, error: 'Failed to fetch products' });
+        // Return empty products instead of 500 error
+        res.json({ 
+            success: true, 
+            products: [], 
+            cached: false,
+            error: error.message 
+        });
     }
 });
 
