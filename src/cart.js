@@ -1,5 +1,7 @@
 // cart.js - Shopping Cart Page Functionality
 
+import { ShoppingCart } from './cartManager.js';
+
 document.addEventListener('DOMContentLoaded', function () {
     const cart = new ShoppingCart();
     

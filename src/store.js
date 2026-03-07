@@ -1,6 +1,8 @@
 // Store.js - RDX Store functionality with Shopping Cart
 
-// Initialize cart (ShoppingCart class is loaded from cartManager.js)
+import { ShoppingCart } from './cartManager.js';
+
+// Initialize cart
 const cart = new ShoppingCart();
 // For local development, use backend port directly. For production, use relative path
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : window.location.origin + '/api';

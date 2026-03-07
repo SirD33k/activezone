@@ -1,9 +1,11 @@
 // checkout.js - Checkout Page Functionality with Gym Master Integration
 
+import { ShoppingCart } from './cartManager.js';
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Checkout page loaded');
     
-    var cart = new ShoppingCart();
+    const cart = new ShoppingCart();
     var DELIVERY_FEE = 5000;
     // For local development, use backend port directly. For production, use relative path
     var API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : window.location.origin + '/api';

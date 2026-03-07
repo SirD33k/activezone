@@ -1,6 +1,6 @@
 // cartManager.js - Shared Shopping Cart Class
 
-class ShoppingCart {
+export class ShoppingCart {
     constructor() {
         this.items = this.loadCart();
         this.updateCartCount();
