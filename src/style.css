@@ -3465,8 +3465,21 @@ img[loading="lazy"] {
   transition: opacity 0.3s;
 }
 
+/* Show image once loaded - works without JavaScript */
+img[loading="lazy"][complete],
 img[loading="lazy"].loaded {
   opacity: 1;
+}
+
+/* Fallback: Show images after a short delay if JS fails */
+img[loading="lazy"] {
+  animation: fadeInLazy 0.3s ease-in 0.5s forwards;
+}
+
+@keyframes fadeInLazy {
+  to {
+    opacity: 1;
+  }
 }
 
 /* Scroll to Top Button */
