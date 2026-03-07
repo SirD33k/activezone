@@ -1987,10 +1987,12 @@ app.post('/api/orders', [
         
         const dbSuccess = await OrderDB.save(orderData);
         
+        console.log('💾 Order save result:', dbSuccess, 'USE_DB:', USE_DB, 'db:', !!db);
+        
         if (dbSuccess) {
-            console.log(`Order ${orderId} saved to MySQL`);
+            console.log(`✅ Order ${orderId} saved successfully`);
         } else {
-            console.error(`Failed to save order ${orderId} to MySQL`);
+            console.error(`❌ Failed to save order ${orderId}`);
         }
         
         // Return response with payment URL from Gym Master

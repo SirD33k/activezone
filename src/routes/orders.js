@@ -11,6 +11,7 @@ const TOTP_SECRET = process.env.TOTP_SECRET || 'DEMO_SECRET';
 
 // Check if MongoDB is available
 const USE_DB = process.env.DATABASE_ENABLED === 'true' && process.env.MONGODB_URI;
+console.log('📦 Orders Router - USE_DB:', USE_DB, 'DATABASE_ENABLED:', process.env.DATABASE_ENABLED, 'MONGODB_URI:', process.env.MONGODB_URI ? 'set' : 'not set');
 
 // Get MongoDB connection from main server if available
 let db = null;
@@ -18,7 +19,19 @@ let db = null;
 // This will be called by server.js to share the MongoDB connection
 function setDatabase(database) {
     db = database;
+    console.log('📦 Orders Router - Database connection set:', !!db);
 }
+
+// Debug endpoint to check status
+router.get('/debug', (req, res) => {
+    res.json({
+        USE_DB,
+        DATABASE_ENABLED: process.env.DATABASE_ENABLED,
+        MONGODB_URI: process.env.MONGODB_URI ? 'set (hidden)' : 'not set',
+        dbConnected: !!db,
+        timestamp: new Date().toISOString()
+    });
+});
 
 function loadOrders() {
     // If MongoDB is available, we should use it
@@ -37,6 +50,7 @@ function loadOrders() {
 
 // Async load orders from MongoDB or file
 async function loadOrdersAsync() {
+    console.log('📦 loadOrdersAsync - USE_DB:', USE_DB, 'db:', !!db);
     if (USE_DB && db) {
         try {
             const orders = await db.collection('orders')
@@ -50,6 +64,7 @@ async function loadOrdersAsync() {
             return loadOrders(); // Fallback to file
         }
     }
+    console.log('📦 Falling back to file storage (USE_DB or db not available)');
     return loadOrders();
 }
 
@@ -121,11 +136,13 @@ async function updateOrderAsync(orderId, updates) {
 
 // Async find order by reference
 async function findOrderByReference(reference) {
+    console.log('📦 findOrderByReference - ref:', reference, 'USE_DB:', USE_DB, 'db:', !!db);
     if (USE_DB && db) {
         try {
             const order = await db.collection('orders').findOne({
                 $or: [{ id: reference }, { orderId: reference }, { paymentReference: reference }]
             });
+            console.log('📦 MongoDB find result:', order ? 'found' : 'not found');
             return order;
         } catch (error) {
             console.error('Error finding order in MongoDB:', error.message);
@@ -133,7 +150,9 @@ async function findOrderByReference(reference) {
     }
     // Fallback to file
     const orders = loadOrders();
-    return orders.find(o => o.id === reference || o.orderId === reference || o.paymentReference === reference);
+    const order = orders.find(o => o.id === reference || o.orderId === reference || o.paymentReference === reference);
+    console.log('📦 File find result:', order ? 'found' : 'not found');
+    return order;
 }
 
 // Async delete order
@@ -361,98 +380,8 @@ router.delete('/:orderId', async (req, res) => {
     }
 });
 
-router.post('/', [
-    body('customer').isObject().withMessage('Customer must be an object'),
-    body('customer.name').trim().escape().notEmpty().withMessage('Customer name is required'),
-    body('customer.email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-    body('items').isArray({ min: 1 }).withMessage('At least one item is required'),
-    body('deliveryMethod').optional().isIn(['delivery', 'pickup']),
-    body('total').isFloat({ min: 0 }).withMessage('Total must be a positive number'),
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ success: false, error: errors.array()[0].msg });
-    }
-
-    const { token, customer, items, deliveryMethod, deliveryAddress, subtotal, deliveryFee, total, notes } = req.body;
-
-    if (!token) {
-        return res.status(400).json({ success: false, error: 'Authentication token is required for purchase' });
-    }
-
-    try {
-        const orderId = 'AZH-' + Date.now();
-        
-        const newOrder = {
-            id: orderId,
-            orderId,
-            customer,
-            customerName: customer.name,
-            customerEmail: customer.email,
-            customerPhone: customer.phone,
-            items,
-            deliveryMethod: deliveryMethod || 'pickup',
-            deliveryAddress,
-            subtotal: subtotal || 0,
-            deliveryFee: deliveryFee || 0,
-            total,
-            notes,
-            paymentStatus: 'pending',
-            deliveryStatus: 'pending',
-            timestamp: new Date().toISOString()
-        };
-
-        const orders = loadOrders();
-        orders.push(newOrder);
-        saveOrders(orders);
-
-        // Initialize Paystack payment
-        let paymentUrl = null;
-        const appBaseUrl = process.env.APP_URL || 'http://localhost:3001';
-        try {
-            const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
-            if (paystackSecret) {
-                const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${paystackSecret}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: customer.email,
-                        amount: total * 100,
-                        reference: orderId,
-                        callback_url: `${appBaseUrl}/payment-success.html?reference=${orderId}`,
-                        metadata: {
-                            orderId,
-                            customer: customer.name,
-                            phone: customer.phone
-                        }
-                    })
-                });
-                
-                const paystackResult = await paystackResponse.json();
-                if (paystackResult.status && paystackResult.data?.authorization_url) {
-                    paymentUrl = paystackResult.data.authorization_url;
-                }
-            }
-        } catch (paystackError) {
-            console.error('Paystack error:', paystackError.message);
-        }
-
-        console.log('New order created:', orderId);
-
-        res.json({ 
-            success: true, 
-            orderId, 
-            paymentUrl,
-            message: paymentUrl ? 'Redirecting to payment...' : 'Order created successfully'
-        });
-    } catch (error) {
-        console.error('Error creating order:', error);
-        res.status(500).json({ success: false, error: 'Failed to create order' });
-    }
-});
+// POST /api/orders is handled in server.js (with Paystack and Gym Master integration)
+// This route was removed to avoid conflict with the main order creation handler
 
 // Verify payment endpoint
 router.get('/verify/:reference', async (req, res) => {
