@@ -1756,12 +1756,20 @@ app.post('/api/orders', [
         });
     }
     
-    // Validate token is present (required for Gym Master purchase)
-    if (!token) {
+    // Check if Gym Master is configured
+    const gymMasterConfigured = GYM_MASTER_CONFIG.apiKey && GYM_MASTER_CONFIG.baseUrl;
+    
+    // Token is required only if Gym Master is configured
+    if (gymMasterConfigured && !token) {
         return res.status(400).json({ 
             success: false, 
-            error: 'Authentication token is required for purchase' 
+            error: 'Authentication token is required for purchase. Please log in or create an account.' 
         });
+    }
+    
+    // If Gym Master is not configured, proceed with local-only order
+    if (!gymMasterConfigured) {
+        console.log('⚠️ Gym Master not configured - processing order locally only');
     }
     
     try {
@@ -1784,143 +1792,131 @@ app.post('/api/orders', [
         console.log('Timestamp:', new Date().toISOString());
         console.log('='.repeat(50));
         
-
-        
-        // Step 1: Call Gym Master Purchase API
-        console.log('📦 Calling Gym Master Purchase API...');
-        
-        // Prepare products array - Gym Master API expects array of {productid, quantity}
-        const products = items.map(item => ({
-            productid: parseInt(item.productId),  // Note: lowercase 'productid' as per Gym Master API
-            quantity: parseInt(item.quantity)
-        }));
-        
-        // Add delivery or pickup product to Gym Master order
-        const DELIVERY_PRODUCT_ID = 730312;  // Delivery ₦5,000
-        const PICKUP_PRODUCT_ID = 730313;    // Pick-Up ₦0 (Free)
-        
-        if (deliveryMethod === 'delivery') {
-            products.push({
-                productid: DELIVERY_PRODUCT_ID,
-                quantity: 1
-            });
-            console.log('✅ Added Delivery product (730312) - ₦5,000');
-        } else {
-            products.push({
-                productid: PICKUP_PRODUCT_ID,
-                quantity: 1
-            });
-            console.log('✅ Added Pick-Up product (730313) - Free');
-        }
-        
-        const gymMasterPurchaseData = {
-            api_key: GYM_MASTER_CONFIG.apiKey,
-            token: token,
-            products: products
-        };
-        
-        console.log('Gym Master Purchase Request:', JSON.stringify(gymMasterPurchaseData, null, 2));
-        
-        const gymMasterResponse = await fetch(`${GYM_MASTER_CONFIG.baseUrl}/api/v2/products`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(gymMasterPurchaseData)
-        });
-        
-        const gymMasterResult = await gymMasterResponse.json();
-        console.log('Gym Master Purchase Response:', JSON.stringify(gymMasterResult, null, 2));
-        
-        // Check if Gym Master purchase was successful
-        if (gymMasterResult.error) {
-            throw new Error(`Gym Master purchase failed: ${gymMasterResult.error}`);
-        }
-        
-        // Extract payment URL from Gym Master response
         let paymentUrl = null;
+        let gymMasterResult = null;
         
-        console.log('🔍 Checking Gym Master response for payment URL...');
-        console.log('Full response keys:', Object.keys(gymMasterResult));
-        
-        // Check all possible payment URL fields
-        if (gymMasterResult.url) {
-            paymentUrl = gymMasterResult.url;
-            console.log('Found payment URL in: result.url');
-        } else if (gymMasterResult.payment_url) {
-            paymentUrl = gymMasterResult.payment_url;
-            console.log('Found payment URL in: result.payment_url');
-        } else if (gymMasterResult.paymentUrl) {
-            paymentUrl = gymMasterResult.paymentUrl;
-            console.log('Found payment URL in: result.paymentUrl');
-        } else if (gymMasterResult.result && typeof gymMasterResult.result === 'string' && gymMasterResult.result.startsWith('http')) {
-            // If result is a URL string
-            paymentUrl = gymMasterResult.result;
-            console.log('Found payment URL in: result (as string)');
-        } else if (gymMasterResult.result && gymMasterResult.result.url) {
-            paymentUrl = gymMasterResult.result.url;
-            console.log('Found payment URL in: result.url');
-        } else if (gymMasterResult.result && gymMasterResult.result.payment_url) {
-            paymentUrl = gymMasterResult.result.payment_url;
-            console.log('Found payment URL in: result.payment_url');
-        } else {
-            console.log('⚠️ No payment URL found in response');
-            console.log('Response result value:', gymMasterResult.result);
-        }
-        
-        console.log('✅ Gym Master purchase successful!');
-        console.log('📦 Stock has been deducted by Gym Master');
-        console.log('Transaction Reference:', gymMasterResult.transaction_ref || 'N/A');
-        
-        // Step 2: If no payment URL, initialize Paystack payment as fallback
-        if (!paymentUrl) {
-            console.log('🔄 No payment URL from Gym Master - Initializing Paystack fallback...');
+        // Step 1: Call Gym Master Purchase API (if configured)
+        if (gymMasterConfigured && token) {
+            console.log('📦 Calling Gym Master Purchase API...');
+            
+            // Prepare products array - Gym Master API expects array of {productid, quantity}
+            const products = items.map(item => ({
+                productid: parseInt(item.productId),  // Note: lowercase 'productid' as per Gym Master API
+                quantity: parseInt(item.quantity)
+            }));
+            
+            // Add delivery or pickup product to Gym Master order
+            const DELIVERY_PRODUCT_ID = 730312;  // Delivery ₦5,000
+            const PICKUP_PRODUCT_ID = 730313;    // Pick-Up ₦0 (Free)
+            
+            if (deliveryMethod === 'delivery') {
+                products.push({
+                    productid: DELIVERY_PRODUCT_ID,
+                    quantity: 1
+                });
+                console.log('✅ Added Delivery product (730312) - ₦5,000');
+            } else {
+                products.push({
+                    productid: PICKUP_PRODUCT_ID,
+                    quantity: 1
+                });
+                console.log('✅ Added Pick-Up product (730313) - Free');
+            }
+            
+            const gymMasterPurchaseData = {
+                api_key: GYM_MASTER_CONFIG.apiKey,
+                token: token,
+                products: products
+            };
+            
+            console.log('Gym Master Purchase Request:', JSON.stringify(gymMasterPurchaseData, null, 2));
             
             try {
-                // Initialize Paystack transaction
-                const appBaseUrl = (process.env.APP_URL || 'http://localhost:3001').replace('/api', '');
-                const paystackData = {
-                    email: customer.email,
-                    amount: Math.round(total * 100), // Convert to kobo (Paystack expects amount in kobo)
-                    currency: 'NGN',
-                    reference: orderId,
-                    callback_url: `${appBaseUrl}/payment-success.html?reference=${orderId}`,
-                    metadata: {
-                        orderId: orderId,
-                        customer_name: customer.name,
-                        customer_phone: customer.phone,
-                        items_count: items.length,
-                        delivery_method: deliveryMethod,
-                        gym_master_transaction: gymMasterResult.transaction_ref
-                    }
-                };
-                
-                console.log('Paystack initialization data:', JSON.stringify(paystackData, null, 2));
-                
-                const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+                const gymMasterResponse = await fetch(`${GYM_MASTER_CONFIG.baseUrl}/api/v2/products`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(paystackData)
+                    body: JSON.stringify(gymMasterPurchaseData)
                 });
                 
-                const paystackResult = await paystackResponse.json();
-                console.log('Paystack response:', JSON.stringify(paystackResult, null, 2));
+                gymMasterResult = await gymMasterResponse.json();
+                console.log('Gym Master Purchase Response:', JSON.stringify(gymMasterResult, null, 2));
                 
-                if (paystackResult.status && paystackResult.data && paystackResult.data.authorization_url) {
-                    paymentUrl = paystackResult.data.authorization_url;
-                    console.log('✅ Paystack payment initialized successfully!');
-                    console.log('💳 Paystack Payment URL:', paymentUrl);
+                // Check if Gym Master purchase was successful
+                if (gymMasterResult.error) {
+                    console.error('Gym Master purchase failed:', gymMasterResult.error);
+                    // Continue with local order
                 } else {
-                    console.error('❌ Paystack initialization failed:', paystackResult.message);
+                    console.log('✅ Gym Master purchase successful!');
+                    console.log('📦 Stock has been deducted by Gym Master');
+                    
+                    // Extract payment URL from Gym Master response
+                    if (gymMasterResult.url) {
+                        paymentUrl = gymMasterResult.url;
+                    } else if (gymMasterResult.payment_url) {
+                        paymentUrl = gymMasterResult.payment_url;
+                    } else if (gymMasterResult.result?.url) {
+                        paymentUrl = gymMasterResult.result.url;
+                    }
+                    
+                    console.log('Transaction Reference:', gymMasterResult.transaction_ref || 'N/A');
                 }
-            } catch (paystackError) {
-                console.error('❌ Error initializing Paystack payment:', paystackError.message);
+            } catch (gmError) {
+                console.error('❌ Gym Master API error:', gmError.message);
+                // Continue with local order
             }
+        } else {
+            console.log('⚠️ Skipping Gym Master - not configured or no token');
         }
         
+        // Step 2: Initialize Paystack payment
+        console.log('🔄 Initializing Paystack payment...');
+        
+        try {
+            // Initialize Paystack transaction
+            const appBaseUrl = (process.env.APP_URL || 'https://activezone.vercel.app').replace('/api', '');
+            const paystackData = {
+                email: customer.email,
+                amount: Math.round(total * 100), // Convert to kobo (Paystack expects amount in kobo)
+                currency: 'NGN',
+                reference: orderId,
+                callback_url: `${appBaseUrl}/payment-success.html?reference=${orderId}`,
+                metadata: {
+                    orderId: orderId,
+                    customer_name: customer.name,
+                    customer_phone: customer.phone,
+                    items_count: items.length,
+                    delivery_method: deliveryMethod,
+                    gym_master_transaction: gymMasterResult?.transaction_ref || null
+                }
+            };
+                    
+            console.log('Paystack initialization data:', JSON.stringify(paystackData, null, 2));
+                    
+            const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(paystackData)
+            });
+                    
+            const paystackResult = await paystackResponse.json();
+            console.log('Paystack response:', JSON.stringify(paystackResult, null, 2));
+                    
+            if (paystackResult.status && paystackResult.data && paystackResult.data.authorization_url) {
+                paymentUrl = paystackResult.data.authorization_url;
+                console.log('✅ Paystack payment initialized successfully!');
+                console.log('💳 Paystack Payment URL:', paymentUrl);
+            } else {
+                console.error('❌ Paystack initialization failed:', paystackResult.message);
+            }
+        } catch (paystackError) {
+            console.error('❌ Error initializing Paystack payment:', paystackError.message);
+        }
+                
         console.log('💳 Final Payment URL:', paymentUrl || 'None');
         
         // Save order to MySQL

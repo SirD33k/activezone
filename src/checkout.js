@@ -313,9 +313,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 } else {
-                    // Continue without token - order will be logged
-                    console.log('Prospect creation returned:', prospectResult.error);
+                    // Continue without token - order will be processed locally
+                    console.log('Prospect creation returned:', prospectResult.error || prospectResult.message);
+                    console.log('Proceeding with local-only order...');
                 }
+                
+                // Even if no token, continue with order (local-only mode)
                 
             } else {
                 // Login existing member
@@ -347,7 +350,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     console.log('Login successful, session ID:', sessionId);
                 } else {
-                    throw new Error(loginResult.error || 'Login failed. Please check your credentials.');
+                    // Show login error - for existing members, we need valid credentials
+                    throw new Error(loginResult.error || 'Login failed. Please check your credentials or select "New Customer" to continue.');
                 }
             }
             
