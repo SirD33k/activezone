@@ -121,6 +121,9 @@ if (USE_DB) {
             db = client.db(dbName);
             logger.info('MongoDB connected', { database: dbName });
             
+            // Share database connection with orders router
+            ordersRoutes.setDatabase(db);
+            
             // Create indexes for better performance
             db.collection('orders').createIndex({ id: 1 }, { unique: true });
             db.collection('orders').createIndex({ paymentReference: 1 });
