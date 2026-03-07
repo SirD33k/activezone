@@ -596,26 +596,35 @@
                 return;
             }
 
-            ordersList.innerHTML = orders.map(order => `
+            ordersList.innerHTML = orders.map(order => {
+                // Handle both flat structure (customerName) and nested structure (customer.name)
+                const customerName = order.customer?.name || order.customerName || 'N/A';
+                const customerEmail = order.customer?.email || order.customerEmail || 'N/A';
+                const customerPhone = order.customer?.phone || order.customerPhone || 'N/A';
+                const customerMemberId = order.customer?.memberId || order.memberId || '';
+                const orderTimestamp = order.timestamp || order.createdAt;
+                const items = order.items || [];
+                
+                return `
                 <div class="order-card">
                     <div class="order-header">
-                        <div class="order-id">${order.orderId}</div>
+                        <div class="order-id">${order.orderId || order.id}</div>
                         <div class="order-status ${order.paymentStatus === 'paid' ? 'status-paid' : 'status-pending'}">
                             ${order.paymentStatus === 'paid' ? '✓ Paid' : 'Pending'}
                         </div>
                     </div>
                     <p style="color: #999; font-size: 12px; margin-bottom: 15px;">
-                        <i class="far fa-clock"></i> ${new Date(order.timestamp).toLocaleString()}
+                        <i class="far fa-clock"></i> ${new Date(orderTimestamp).toLocaleString()}
                     </p>
                     
                     <div class="order-details">
                         <!-- Customer Info -->
                         <div class="detail-section">
                             <h4><i class="fas fa-user"></i> Customer</h4>
-                            <p><strong>Name:</strong> ${order.customer.name}</p>
-                            <p><strong>Email:</strong> ${order.customer.email}</p>
-                            <p><strong>Phone:</strong> ${order.customer.phone || 'N/A'}</p>
-                            ${order.customer.memberId ? `<p><strong>Member ID:</strong> ${order.customer.memberId}</p>` : ''}
+                            <p><strong>Name:</strong> ${customerName}</p>
+                            <p><strong>Email:</strong> ${customerEmail}</p>
+                            <p><strong>Phone:</strong> ${customerPhone || 'N/A'}</p>
+                            ${customerMemberId ? `<p><strong>Member ID:</strong> ${customerMemberId}</p>` : ''}
                         </div>
 
                         <!-- Delivery Info -->
@@ -624,21 +633,21 @@
                             <p><strong>Method:</strong> ${order.deliveryMethod === 'delivery' ? 'Home Delivery' : 'Pickup from Store'}</p>
                             ${order.deliveryAddress ? `
                                 <p><strong>Address:</strong><br>
-                                ${order.deliveryAddress.street}<br>
-                                ${order.deliveryAddress.city}, ${order.deliveryAddress.state}
+                                ${order.deliveryAddress.street || ''}<br>
+                                ${order.deliveryAddress.city || ''}, ${order.deliveryAddress.state || ''}
                                 ${order.deliveryAddress.postalCode ? ', ' + order.deliveryAddress.postalCode : ''}</p>
                             ` : '<p>Pickup from store</p>'}
-                            <p><strong>Fee:</strong> ₦${formatNumber(order.deliveryFee)}</p>
+                            <p><strong>Fee:</strong> ₦${formatNumber(order.deliveryFee || 0)}</p>
                         </div>
 
                         <!-- Items -->
                         <div class="detail-section">
-                            <h4><i class="fas fa-shopping-bag"></i> Items (${order.items.length})</h4>
+                            <h4><i class="fas fa-shopping-bag"></i> Items (${items.length})</h4>
                             <ul class="items-list">
-                                ${order.items.map(item => `
+                                ${items.map(item => `
                                     <li>
-                                        <strong>${item.name}</strong><br>
-                                        Qty: ${item.quantity} × ₦${formatNumber(item.price)} = ₦${formatNumber(item.quantity * item.price)}
+                                        <strong>${item.name || 'Product'}</strong><br>
+                                        Qty: ${item.quantity || 1} × ₦${formatNumber(item.price || 0)} = ₦${formatNumber((item.quantity || 1) * (item.price || 0))}
                                     </li>
                                 `).join('')}
                             </ul>
@@ -647,9 +656,9 @@
                         <!-- Total -->
                         <div class="order-total">
                             <p style="margin: 0; font-size: 12px;">Total Amount</p>
-                            <div class="amount">₦${formatNumber(order.total)}</div>
+                            <div class="amount">₦${formatNumber(order.total || 0)}</div>
                             <p style="margin: 5px 0 0 0; font-size: 11px; color: #ccc;">
-                                Subtotal: ₦${formatNumber(order.subtotal)} + Delivery: ₦${formatNumber(order.deliveryFee)}
+                                Subtotal: ₦${formatNumber(order.subtotal || 0)} + Delivery: ₦${formatNumber(order.deliveryFee || 0)}
                             </p>
                         </div>
                     </div>
@@ -664,23 +673,23 @@
                     <!-- Delivery Status Control -->
                     <div class="detail-section" style="margin-top: 15px; background: #fff3e0; border-left: 4px solid #ff9800;">
                         <h4><i class="fas fa-truck"></i> Delivery Status</h4>
-                        <select onchange="updateOrderStatus('${order.orderId}', this.value)" 
+                        <select onchange="updateOrderStatus('${order.orderId || order.id}', this.value)" 
                             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                            <option value="pending" ${(order.deliveryStatus || 'pending') === 'pending' ? 'selected' : ''}>⏳ Pending Payment</option>
-                            <option value="paid" ${(order.deliveryStatus || 'pending') === 'paid' ? 'selected' : ''}>💳 Payment Confirmed</option>
-                            <option value="processing" ${(order.deliveryStatus || 'pending') === 'processing' ? 'selected' : ''}>📦 Processing Order</option>
-                            <option value="shipped" ${(order.deliveryStatus || 'pending') === 'shipped' ? 'selected' : ''}>🚚 Shipped</option>
-                            <option value="delivered" ${(order.deliveryStatus || 'pending') === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
+                            <option value="pending" ${(order.deliveryStatus || order.status || 'pending') === 'pending' ? 'selected' : ''}>⏳ Pending Payment</option>
+                            <option value="paid" ${(order.deliveryStatus || order.status || 'pending') === 'paid' ? 'selected' : ''}>💳 Payment Confirmed</option>
+                            <option value="processing" ${(order.deliveryStatus || order.status || 'pending') === 'processing' ? 'selected' : ''}>📦 Processing Order</option>
+                            <option value="shipped" ${(order.deliveryStatus || order.status || 'pending') === 'shipped' ? 'selected' : ''}>🚚 Shipped</option>
+                            <option value="delivered" ${(order.deliveryStatus || order.status || 'pending') === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
                         </select>
                         <p style="margin-top: 10px; font-size: 12px; color: #e65100;">
-                            <i class="fas fa-info-circle"></i> Customer can track using reference: <strong>${order.orderId}</strong>
+                            <i class="fas fa-info-circle"></i> Customer can track using reference: <strong>${order.orderId || order.id}</strong>
                         </p>
                     </div>
                     
                     ${order.paymentStatus === 'pending' || order.deliveryStatus === 'pending' ? `
                     <!-- Delete Button for Unpaid Orders -->
                     <div class="detail-section" style="margin-top: 15px; background: #ffebee; border-left: 4px solid #e53935;">
-                        <button onclick="deleteOrder('${order.orderId}')" 
+                        <button onclick="deleteOrder('${order.orderId || order.id}')" 
                             style="width: 100%; padding: 12px; background: #e53935; color: white; border: none; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s;"
                             onmouseover="this.style.background='#c62828'" 
                             onmouseout="this.style.background='#e53935'">
@@ -692,7 +701,7 @@
                     </div>
                     ` : ''}
                 </div>
-            `).join('');
+            `;}).join('');
         }
 
         function updateStats(orders) {
