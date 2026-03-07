@@ -410,12 +410,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.removeItem('activeZoneCart');
                 
                 // Redirect to payment or home
-                if (orderResult.paymentUrl) {
-                    console.log('Redirecting to payment:', orderResult.paymentUrl);
-                    window.location.href = orderResult.paymentUrl;
+                // API returns 'authorizationUrl', not 'paymentUrl'
+                const paymentUrl = orderResult.authorizationUrl || orderResult.paymentUrl;
+                
+                if (paymentUrl) {
+                    console.log('Redirecting to payment:', paymentUrl);
+                    window.location.href = paymentUrl;
                 } else {
-                    // Show success message for test mode
-                    alert('Order Placed Successfully!\n\nOrder ID: ' + orderResult.orderId + '\nCustomer: ' + customerInfo.name + '\nTotal: NGN' + total.toLocaleString());
+                    // Show success message for test mode or if no payment URL
+                    console.log('No payment URL returned, order result:', orderResult);
+                    alert('Order Placed Successfully!\n\nOrder ID: ' + orderResult.orderId + '\nCustomer: ' + customerInfo.name + '\nTotal: NGN' + total.toLocaleString() + '\n\nNote: Payment link not generated. Check your email for payment instructions.');
                     window.location.href = 'index.html';
                 }
             } else {
