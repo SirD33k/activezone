@@ -22,26 +22,12 @@ async function fetchAndRenderProducts() {
     // Store original static content as fallback
     const originalContent = productsGrid.innerHTML;
     
-    // Only show loading state if API takes longer than 500ms
-    let loadingTimeout;
-    let showLoading = false;
-    
-    const showLoadingState = () => {
-        if (!showLoading) {
-            showLoading = true;
-            productsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">Loading products...</div>';
-        }
-    };
-    
-    // Set timeout to show loading after 500ms
-    loadingTimeout = setTimeout(showLoadingState, 500);
+    // Don't show loading state - keep static products visible while fetching
+    // This provides a better user experience
     
     try {
         const response = await fetch(API_BASE + '/products');
         const result = await response.json();
-        
-        // Clear the loading timeout since we got a response
-        clearTimeout(loadingTimeout);
         
         console.log('Products API response:', result);
         
@@ -72,53 +58,42 @@ async function fetchAndRenderProducts() {
                 });
             }
             
-            if (inStockProducts.length > 0) {
-                // Only replace content if we have a reasonable number of products
-                if (inStockProducts.length >= 3) {
-                    console.log(`Rendering ${inStockProducts.length} products from API`);
-                    // Only show loading if we're actually going to replace content
-                    if (!showLoading) {
-                        showLoadingState();
-                    }
-                    renderProducts(inStockProducts);
-                } else {
-                    console.log(`Only ${inStockProducts.length} products from API, keeping static content`);
-                    // Don't replace content, just ensure cart works
-                    attachAddToCartListeners();
-                }
+            if (inStockProducts.length >= 5) {
+                // Only replace content if we have a good number of products from API
+                console.log(`Rendering ${inStockProducts.length} products from API`);
+                renderProducts(inStockProducts);
             } else {
-                // If no in-stock products from API, keep static content
-                console.log('No in-stock products from API, keeping static content');
+                console.log(`Only ${inStockProducts.length} products from API, keeping static content`);
                 // Don't replace content, just ensure cart works
                 attachAddToCartListeners();
             }
         } else {
             // If API returns no products, keep static content
             console.log('API returned no products, keeping static content');
-            // Don't replace content, just ensure cart works
+            // Restore original content if it was replaced
+            if (productsGrid.innerHTML !== originalContent) {
+                productsGrid.innerHTML = originalContent;
+            }
             attachAddToCartListeners();
         }
     } catch (error) {
         console.error('Error fetching products:', error);
         
-        // Clear the loading timeout
-        clearTimeout(loadingTimeout);
+        // Restore original static content on error
+        productsGrid.innerHTML = originalContent;
         
-        // If API fails, keep static content but add refresh option
-        // Don't replace content, just ensure cart works
+        // Ensure cart works with restored content
         attachAddToCartListeners();
         
-        // Add a refresh button after the existing content
-        const refreshButton = document.createElement("button");
-        refreshButton.textContent = "Retry API Connection";
-        refreshButton.className = "btn-primary";
-        refreshButton.style.margin = "20px auto";
-        refreshButton.style.display = "block";
-        refreshButton.style.padding = "12px 24px";
-        refreshButton.onclick = fetchAndRenderProducts;
-        
-        // Append to products grid
-        productsGrid.appendChild(refreshButton);
+        // Show a small retry notification at the top
+        const notification = document.createElement('div');
+        notification.style.cssText = 'background: #d4af37; color: #000; padding: 10px; text-align: center; margin-bottom: 20px; border-radius: 5px;';
+        notification.innerHTML = 'Using offline product data. <button style="margin-left: 10px; padding: 5px 15px; cursor: pointer; border: none; background: #000; color: #fff; border-radius: 3px;">Retry</button>';
+        notification.querySelector('button').onclick = () => {
+            notification.remove();
+            fetchAndRenderProducts();
+        };
+        productsGrid.parentNode.insertBefore(notification, productsGrid);
     }
 }
 

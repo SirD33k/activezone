@@ -21,9 +21,15 @@ async function fetchProductsFromGymMaster() {
     try {
         const url = `${GYM_MASTER_CONFIG.baseUrl}/api/v2/products?api_key=${GYM_MASTER_CONFIG.apiKey}&companyId=${GYM_MASTER_CONFIG.companyId}`;
         
+        // Use AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
         const response = await fetch(url, {
-            timeout: 10000
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (response.ok) {
             const data = await response.json();
@@ -35,6 +41,8 @@ async function fetchProductsFromGymMaster() {
             
             console.log(`Fetched ${products.length} products from Gym Master API`);
             return products;
+        } else {
+            console.error('Gym Master API returned status:', response.status);
         }
     } catch (error) {
         console.error('Gym Master API error:', error.message);
