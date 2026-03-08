@@ -1038,13 +1038,30 @@
             console.log(`✅ Exported ${ordersToExport.length} orders to CSV`);
         }
 
-        // Load orders on page load
-        if (checkAuth()) {
-            loadOrders();
-            loadInventory();
-            // Auto-refresh every 30 seconds
-            setInterval(loadOrders, 30000);
-            setInterval(loadInventory, 60000); // Refresh inventory every minute
+        // Load orders on page load - wait for DOM to be ready
+        let ordersLoaded = false;
+        
+        function initOrders() {
+            if (ordersLoaded) return; // Prevent double initialization
+            ordersLoaded = true;
+            
+            console.log('Initializing orders page...');
+            if (checkAuth()) {
+                console.log('Auth check passed, loading orders...');
+                loadOrders();
+                loadInventory();
+                // Auto-refresh every 30 seconds
+                setInterval(loadOrders, 30000);
+                setInterval(loadInventory, 60000); // Refresh inventory every minute
+            }
+        }
+        
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initOrders);
+        } else {
+            // DOM is already ready
+            initOrders();
         }
 
         // Tab switching

@@ -106,13 +106,28 @@ async function getOrderFromFile(orderId) {
 // Connect to MongoDB Atlas if DATABASE_ENABLED=true and MONGODB_URI is provided
 let mongoClient = null;
 let db = null;
+let dbConnectionPromise = null;
 const USE_DB = process.env.DATABASE_ENABLED === 'true' && process.env.MONGODB_URI;
+
+// Function to ensure database is connected before operations
+async function ensureDbConnected() {
+    if (!USE_DB) return false;
+    if (db) return true;
+    
+    // Wait for existing connection attempt if in progress
+    if (dbConnectionPromise) {
+        await dbConnectionPromise;
+        return !!db;
+    }
+    
+    return false;
+}
 
 if (USE_DB) {
     const mongoUri = process.env.MONGODB_URI;
     const dbName = process.env.MONGODB_DB_NAME || 'activezone';
     
-    MongoClient.connect(mongoUri, {
+    dbConnectionPromise = MongoClient.connect(mongoUri, {
         serverSelectionTimeoutMS: 5000,
         connectTimeoutMS: 10000
     })
@@ -128,9 +143,14 @@ if (USE_DB) {
             db.collection('orders').createIndex({ id: 1 }, { unique: true });
             db.collection('orders').createIndex({ paymentReference: 1 });
             db.collection('orders').createIndex({ createdAt: -1 });
+            
+            dbConnectionPromise = null; // Clear promise after success
+            return true;
         })
         .catch(error => {
             logger.error('MongoDB connection failed', { error: error.message });
+            dbConnectionPromise = null;
+            return false;
         });
 } else {
     logger.info('Running in file-based mode. Set DATABASE_ENABLED=true and MONGODB_URI in .env to use MongoDB');

@@ -50,6 +50,20 @@ function loadOrders() {
 // Async load orders from MongoDB or file
 async function loadOrdersAsync() {
     console.log('📦 loadOrdersAsync - USE_DB:', USE_DB, 'db:', !!db);
+    
+    // Wait for database connection if in progress
+    if (USE_DB && !db) {
+        console.log('📦 Waiting for database connection...');
+        // Wait up to 3 seconds for db to be available
+        for (let i = 0; i < 30; i++) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (db) {
+                console.log('📦 Database connection ready!');
+                break;
+            }
+        }
+    }
+    
     if (USE_DB && db) {
         try {
             const orders = await db.collection('orders')
@@ -136,6 +150,20 @@ async function updateOrderAsync(orderId, updates) {
 // Async find order by reference
 async function findOrderByReference(reference) {
     console.log('📦 findOrderByReference - ref:', reference, 'USE_DB:', USE_DB, 'db:', !!db);
+    
+    // Wait for database connection if in progress
+    if (USE_DB && !db) {
+        console.log('📦 Waiting for database connection...');
+        // Wait up to 3 seconds for db to be available
+        for (let i = 0; i < 30; i++) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (db) {
+                console.log('📦 Database connection ready!');
+                break;
+            }
+        }
+    }
+    
     if (USE_DB && db) {
         try {
             const order = await db.collection('orders').findOne({
