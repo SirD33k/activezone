@@ -2,13 +2,34 @@
 const brevo = require('@getbrevo/brevo');
 require('dotenv').config();
 
+// Helper function to extract API key from base64 or return as-is
+function extractBrevoApiKey(key) {
+    if (!key) return null;
+    
+    // If it looks like base64 encoded JSON (starts with eyJ), decode it
+    if (key.startsWith('eyJ')) {
+        try {
+            const decoded = Buffer.from(key, 'base64').toString('utf-8');
+            const parsed = JSON.parse(decoded);
+            if (parsed.api_key) {
+                console.log('   Decoded base64 API key to extract actual key');
+                return parsed.api_key;
+            }
+        } catch (e) {
+            // Not valid base64 JSON, use as-is
+        }
+    }
+    return key;
+}
+
 // Initialize Brevo client
 let brevoClient = null;
 
-if (process.env.BREVO_API_KEY) {
+const rawApiKey = extractBrevoApiKey(process.env.BREVO_API_KEY);
+if (rawApiKey) {
     try {
         const apiInstance = new brevo.TransactionalEmailsApi();
-        apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+        apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, rawApiKey);
         brevoClient = apiInstance;
         console.log('✅ Email utility: Brevo client initialized');
     } catch (error) {

@@ -1054,6 +1054,21 @@ app.patch('/api/orders/:orderId/status', [
 });
 
 // Test email endpoint
+app.get('/api/email-status', (req, res) => {
+    const rawKey = extractBrevoApiKey(process.env.BREVO_API_KEY);
+    res.json({
+        brevoConfigured: !!process.env.BREVO_API_KEY,
+        brevoClientInitialized: !!brevoClient,
+        apiKeyLength: process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.length : 0,
+        apiKeyPrefix: process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.substring(0, 20) + '...' : 'N/A',
+        rawApiKeyExtracted: !!rawKey,
+        rawApiKeyPrefix: rawKey ? rawKey.substring(0, 15) + '...' : 'N/A',
+        senderEmail: process.env.SMTP_FROM_EMAIL || 'activezone6060@gmail.com',
+        senderName: process.env.SMTP_FROM_NAME || 'Active Zone Hub',
+        emailService: emailService
+    });
+});
+
 app.get('/api/test-email', async (req, res) => {
     try {
         const testEmail = req.query.email || 'yarima.abubakar@activezone.ng';
@@ -1063,6 +1078,8 @@ app.get('/api/test-email', async (req, res) => {
         console.log('='.repeat(60));
         console.log(`To: ${testEmail}`);
         console.log(`From: ${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'activezone6060@gmail.com'}>`);
+        console.log(`BREVO_API_KEY set: ${process.env.BREVO_API_KEY ? 'Yes (length: ' + process.env.BREVO_API_KEY.length + ')' : 'No'}`);
+        console.log(`brevoClient initialized: ${brevoClient ? 'Yes' : 'No'}`);
         console.log('='.repeat(60));
         
         if (!brevoClient) {
@@ -1091,21 +1108,27 @@ app.get('/api/test-email', async (req, res) => {
         if (result.body && result.body.messageId) {
             console.log(`   Message ID: ${result.body.messageId}`);
         }
+        console.log('Full Brevo response:', JSON.stringify(result, null, 2));
         console.log('='.repeat(60) + '\n');
         
         res.json({
             success: true,
             message: 'Test email sent successfully via Brevo',
             messageId: result.body?.messageId || 'N/A',
-            recipient: testEmail
+            recipient: testEmail,
+            brevoResponse: result.body
         });
+        
     } catch (error) {
-        console.error('❌ Test email failed:', error.message);
+        console.error('❌ Error sending test email:', error.message);
+        console.error('Full error:', error.response?.data || error);
         console.log('='.repeat(60) + '\n');
+        
         res.status(500).json({
             success: false,
             error: error.message,
-            details: error.toString()
+            details: error.response?.data || error.toString(),
+            hint: 'Check if BREVO_API_KEY is valid and sender email is verified in Brevo'
         });
     }
 });
@@ -1306,15 +1329,37 @@ console.log('\n' + '='.repeat(60));
 console.log('EMAIL SERVICE INITIALIZATION');
 console.log('='.repeat(60));
 
+// Helper function to extract API key from base64 or return as-is
+function extractBrevoApiKey(key) {
+    if (!key) return null;
+    
+    // If it looks like base64 encoded JSON (starts with eyJ), decode it
+    if (key.startsWith('eyJ')) {
+        try {
+            const decoded = Buffer.from(key, 'base64').toString('utf-8');
+            const parsed = JSON.parse(decoded);
+            if (parsed.api_key) {
+                console.log('   Decoded base64 API key to extract actual key');
+                return parsed.api_key;
+            }
+        } catch (e) {
+            // Not valid base64 JSON, use as-is
+        }
+    }
+    return key;
+}
+
 // Use Brevo API (works on Render - uses HTTPS port 443)
-if (process.env.BREVO_API_KEY) {
+const rawApiKey = extractBrevoApiKey(process.env.BREVO_API_KEY);
+if (rawApiKey) {
     try {
         console.log('Initializing Brevo email service (HTTP API)...');
         const apiInstance = new brevo.TransactionalEmailsApi();
-        apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+        apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, rawApiKey);
         brevoClient = apiInstance;
         emailService = 'brevo';
         console.log('\u2705 Brevo email service initialized');
+        console.log(`   API Key: ${rawApiKey.substring(0, 15)}...${rawApiKey.substring(rawApiKey.length - 10)}`);
         console.log(`   From: ${process.env.SMTP_FROM_NAME || 'Active Zone Hub'} <${process.env.SMTP_FROM_EMAIL || 'activezone6060@gmail.com'}>`);
         console.log('   Using HTTPS API (port 443) - compatible with Render');
     } catch (error) {
