@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const { body, param, validationResult } = require('express-validator');
 const speakeasy = require('speakeasy');
-const { sendStatusUpdateEmail } = require('../utils/email');
 
 const ORDERS_FILE = path.join(__dirname, '../../../orders-data.json');
 const TOTP_SECRET = process.env.TOTP_SECRET || 'DEMO_SECRET';
@@ -183,19 +182,6 @@ async function deleteOrderAsync(orderId) {
     return false;
 }
 
-// Send order email (status update)
-async function sendOrderEmail(order, status) {
-    console.log(`📧 Sending ${status} email for order ${order.orderId}`);
-    
-    const customerEmail = order.customerEmail || order.customer?.email;
-    if (!customerEmail) {
-        console.log('⚠️  No customer email found, skipping email');
-        return { success: false, error: 'No customer email' };
-    }
-    
-    return await sendStatusUpdateEmail(customerEmail, order, status);
-}
-
 router.get('/', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -297,48 +283,8 @@ router.get('/track/:reference', [
     }
 });
 
-router.patch('/:orderId/status', [
-    param('orderId').trim().escape().notEmpty().withMessage('Order ID is required'),
-    body('deliveryStatus').isIn(['pending', 'paid', 'processing', 'shipped', 'delivered']).withMessage('Invalid delivery status'),
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ success: false, error: errors.array()[0].msg });
-    }
-
-    const { orderId } = req.params;
-    const { deliveryStatus } = req.body;
-
-    try {
-        const order = await findOrderByReference(orderId);
-        if (!order) {
-            return res.status(404).json({ success: false, error: 'Order not found' });
-        }
-
-        const updated = await updateOrderAsync(orderId, {
-            deliveryStatus: deliveryStatus,
-            status: deliveryStatus,
-            statusUpdatedAt: new Date().toISOString()
-        });
-
-        if (!updated) {
-            return res.status(500).json({ success: false, error: 'Failed to update order' });
-        }
-
-        // Send status update email
-        const emailResult = await sendOrderEmail({ ...order, deliveryStatus }, deliveryStatus);
-        if (emailResult.success) {
-            console.log(`✅ Email sent for order ${orderId}`);
-        } else {
-            console.log(`⚠️  Email failed for order ${orderId}: ${emailResult.error}`);
-        }
-
-        res.json({ success: true, message: 'Order status updated', emailSent: emailResult.success });
-    } catch (error) {
-        console.error('Error updating order:', error);
-        res.status(500).json({ success: false, error: 'Failed to update order' });
-    }
-});
+// NOTE: PATCH /:orderId/status is handled in server.js to avoid duplicate route handlers
+// The server.js implementation includes full email functionality with Brevo integration
 
 router.delete('/:orderId', async (req, res) => {
     const { orderId } = req.params;
