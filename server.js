@@ -1062,10 +1062,22 @@ app.get('/api/email-status', (req, res) => {
         apiKeyLength: process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.length : 0,
         apiKeyPrefix: process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.substring(0, 20) + '...' : 'N/A',
         rawApiKeyExtracted: !!rawKey,
+        rawApiKeyLength: rawKey ? rawKey.length : 0,
         rawApiKeyPrefix: rawKey ? rawKey.substring(0, 15) + '...' : 'N/A',
+        rawApiKeySuffix: rawKey ? '...' + rawKey.substring(rawKey.length - 15) : 'N/A',
         senderEmail: process.env.SMTP_FROM_EMAIL || 'activezone6060@gmail.com',
         senderName: process.env.SMTP_FROM_NAME || 'Active Zone Hub',
-        emailService: emailService
+        emailService: emailService,
+        // Show decoded JSON structure for debugging
+        decodedKeyStructure: (() => {
+            try {
+                if (process.env.BREVO_API_KEY?.startsWith('eyJ')) {
+                    const decoded = Buffer.from(process.env.BREVO_API_KEY, 'base64').toString('utf-8');
+                    return JSON.parse(decoded);
+                }
+            } catch (e) {}
+            return null;
+        })()
     });
 });
 
@@ -1122,13 +1134,33 @@ app.get('/api/test-email', async (req, res) => {
     } catch (error) {
         console.error('❌ Error sending test email:', error.message);
         console.error('Full error:', error.response?.data || error);
+        console.error('Error status:', error.response?.status);
+        console.error('Error code:', error.code);
         console.log('='.repeat(60) + '\n');
+        
+        // Check for specific Brevo error codes
+        const brevoError = error.response?.data;
+        let errorMessage = error.message;
+        let hint = '';
+        
+        if (brevoError) {
+            if (brevoError.code === 'unauthorized') {
+                errorMessage = 'Invalid API key';
+                hint = 'The Brevo API key is invalid or expired. Please regenerate a new API key from Brevo dashboard.';
+            } else if (brevoError.code === 'insufficient_credits') {
+                errorMessage = 'Insufficient email credits';
+                hint = 'Your Brevo account has run out of email credits.';
+            } else if (brevoError.message) {
+                errorMessage = brevoError.message;
+            }
+        }
         
         res.status(500).json({
             success: false,
-            error: error.message,
-            details: error.response?.data || error.toString(),
-            hint: 'Check if BREVO_API_KEY is valid and sender email is verified in Brevo'
+            error: errorMessage,
+            code: brevoError?.code || error.code,
+            details: brevoError || error.toString(),
+            hint: hint || 'Check if BREVO_API_KEY is valid and sender email is verified in Brevo'
         });
     }
 });
