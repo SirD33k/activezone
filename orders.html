@@ -539,25 +539,38 @@
             const searchTerm = document.getElementById('searchBox')?.value || '';
             
             try {
+                console.log('Fetching orders...');
                 const response = await fetch(API_BASE + `/orders?page=${pagination.page}&limit=20&status=${statusFilter}&search=${encodeURIComponent(searchTerm)}`);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
+                console.log('API result:', result);
+                console.log('Orders count:', result.orders?.length);
                 
                 if (result.success && result.orders) {
                     allOrders = result.orders;
                     pagination = result.pagination || { page: 1, totalPages: 1, total: 0 };
+                    console.log('Calling displayOrders with', allOrders.length, 'orders');
                     displayOrders(allOrders);
                     updateStats(allOrders);
                     updatePagination();
                 } else {
+                    console.log('No orders or success=false:', result);
                     showEmptyState();
                 }
             } catch (error) {
                 console.error('Error loading orders:', error);
+                console.error('Error stack:', error.stack);
                 document.getElementById('ordersList').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-triangle"></i>
                         <h3>Failed to load orders</h3>
-                        <p>Make sure the backend server is running on port 3001</p>
+                        <p>Error: ${error.message}</p>
+                        <p style="font-size: 12px; color: #999;">Check browser console for details</p>
                     </div>
                 `;
             }
@@ -586,24 +599,32 @@
         }
 
         function displayOrders(orders) {
-            const ordersList = document.getElementById('ordersList');
-            
-            // Update filtered count
-            document.getElementById('filteredCount').textContent = orders.length;
-            
-            if (orders.length === 0) {
-                showEmptyState();
-                return;
-            }
+            try {
+                console.log('displayOrders called with', orders?.length, 'orders');
+                const ordersList = document.getElementById('ordersList');
+                
+                if (!ordersList) {
+                    console.error('ordersList element not found!');
+                    return;
+                }
+                
+                // Update filtered count
+                document.getElementById('filteredCount').textContent = orders.length;
+                
+                if (orders.length === 0) {
+                    showEmptyState();
+                    return;
+                }
 
-            ordersList.innerHTML = orders.map(order => {
-                // Handle both flat structure (customerName) and nested structure (customer.name)
-                const customerName = order.customer?.name || order.customerName || 'N/A';
-                const customerEmail = order.customer?.email || order.customerEmail || 'N/A';
-                const customerPhone = order.customer?.phone || order.customerPhone || 'N/A';
-                const customerMemberId = order.customer?.memberId || order.memberId || '';
-                const orderTimestamp = order.timestamp || order.createdAt;
-                const items = order.items || [];
+                console.log('Building HTML for orders...');
+                const html = orders.map(order => {
+                    // Handle both flat structure (customerName) and nested structure (customer.name)
+                    const customerName = order.customer?.name || order.customerName || 'N/A';
+                    const customerEmail = order.customer?.email || order.customerEmail || 'N/A';
+                    const customerPhone = order.customer?.phone || order.customerPhone || 'N/A';
+                    const customerMemberId = order.customer?.memberId || order.memberId || '';
+                    const orderTimestamp = order.timestamp || order.createdAt;
+                    const items = order.items || [];
                 
                 return `
                 <div class="order-card">
@@ -702,6 +723,22 @@
                     ` : ''}
                 </div>
             `;}).join('');
+                
+                console.log('Setting innerHTML...');
+                ordersList.innerHTML = html;
+                console.log('Orders displayed successfully!');
+            } catch (error) {
+                console.error('Error in displayOrders:', error);
+                console.error('Error stack:', error.stack);
+                document.getElementById('ordersList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error displaying orders</h3>
+                        <p>${error.message}</p>
+                        <p style="font-size: 12px; color: #999;">Check browser console for details</p>
+                    </div>
+                `;
+            }
         }
 
         function updateStats(orders) {

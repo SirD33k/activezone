@@ -25,7 +25,7 @@ function setDatabase(database) {
 // Debug endpoint to check status
 router.get('/debug', (req, res) => {
     res.json({
-        USE_DB,
+        USE_DB: USE_DB ? true : false,
         DATABASE_ENABLED: process.env.DATABASE_ENABLED,
         MONGODB_URI: process.env.MONGODB_URI ? 'set (hidden)' : 'not set',
         dbConnected: !!db,
