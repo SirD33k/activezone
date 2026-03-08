@@ -389,16 +389,28 @@
             errorMessage.classList.remove('show');
             orderResult.classList.remove('show');
             
+            if (!reference) {
+                document.getElementById('errorText').textContent = 'Please enter an order reference number.';
+                errorMessage.classList.add('show');
+                return;
+            }
+            
+            console.log('Tracking order:', reference);
+            console.log('API URL:', `${API_BASE}/orders/track/${reference}`);
+            
             try {
                 const response = await fetch(`${API_BASE}/orders/track/${reference}`);
-                const result = await response.json();
+                console.log('Response status:', response.status);
                 
-                if (result.success && result.order) {
+                const result = await response.json();
+                console.log('API result:', result);
+                
+                if (response.ok && result.success && result.order) {
                     displayOrder(result.order);
                     orderResult.classList.add('show');
                 } else {
                     document.getElementById('errorText').textContent = 
-                        result.message || 'Order not found. Please check your reference number.';
+                        result.error || result.message || 'Order not found. Please check your reference number.';
                     errorMessage.classList.add('show');
                 }
             } catch (error) {
