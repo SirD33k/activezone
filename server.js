@@ -235,11 +235,18 @@ const OrderDB = {
     delete: deleteOrderFromDB,
     updatePayment: updateOrderPaymentInDB,
     getById: async (id) => {
-        if (!USE_DB || !db) return await getOrderFromFile(id);
+        console.log(`OrderDB.getById called with id: ${id}`);
+        if (!USE_DB || !db) {
+            console.log('Using file storage for getById');
+            return await getOrderFromFile(id);
+        }
         try {
-            return await db.collection('orders').findOne({
+            console.log(`Querying MongoDB for order with id/paymentReference: ${id}`);
+            const order = await db.collection('orders').findOne({
                 $or: [{ id: id }, { paymentReference: id }]
             });
+            console.log(`MongoDB query result:`, order ? `Found (id: ${order.id})` : 'Not found');
+            return order;
         } catch (error) {
             console.error('Error in OrderDB.getById:', error.message);
             throw error;
@@ -262,11 +269,14 @@ const OrderDB = {
                 const index = orders.findIndex(o => o.id === id || o.paymentReference === id);
                 if (index !== -1) {
                     orders[index].status = status;
+                    orders[index].deliveryStatus = status;
                     orders[index].statusUpdatedAt = new Date().toISOString();
+                    orders[index].updatedAt = new Date().toISOString();
                     saveOrdersToFile(orders);
                     console.log(`📦 Order ${id} status updated to: ${status}`);
                     return true;
                 }
+                console.log(`⚠️ Order ${id} not found in file for status update`);
                 return false;
             } catch (error) {
                 console.error('Error updating order status in file:', error.message);
@@ -274,10 +284,12 @@ const OrderDB = {
             }
         }
         try {
+            console.log(`Updating order ${id} status to ${status} in MongoDB...`);
             const result = await db.collection('orders').updateOne(
                 { $or: [{ id: id }, { paymentReference: id }] },
-                { $set: { status: status, statusUpdatedAt: new Date().toISOString() } }
+                { $set: { status: status, deliveryStatus: status, statusUpdatedAt: new Date().toISOString(), updatedAt: new Date().toISOString() } }
             );
+            console.log(`MongoDB update result: matched=${result.matchedCount}, modified=${result.modifiedCount}`);
             return result.modifiedCount > 0;
         } catch (error) {
             console.error('Error in OrderDB.updateStatus:', error.message);
@@ -986,7 +998,9 @@ app.patch('/api/orders/:orderId/status', [
     }
     
     try {
+        console.log(`PATCH /api/orders/${orderId}/status - Looking for order...`);
         const order = await OrderDB.getById(orderId);
+        console.log(`Order found:`, order ? `Yes (id: ${order.id || order._id})` : 'No');
         
         if (order) {
             const oldStatus = order.status || 'pending';

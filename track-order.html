@@ -422,33 +422,41 @@
         }
 
         function displayOrder(order) {
-            // Display order ID and date
-            document.getElementById('displayOrderId').textContent = order.orderId;
-            document.getElementById('displayOrderDate').textContent = 
-                'Placed on ' + new Date(order.timestamp).toLocaleString();
-            
-            // Display status timeline
-            displayTimeline(order);
-            
-            // Display customer info
-            document.getElementById('customerInfo').innerHTML = `
-                <p><strong>Name:</strong> ${order.customer.name}</p>
-                <p><strong>Email:</strong> ${order.customer.email}</p>
-                <p><strong>Phone:</strong> ${order.customer.phone || 'N/A'}</p>
-            `;
-            
-            // Display delivery info
-            const deliveryHTML = order.deliveryMethod === 'delivery' ? `
-                <p><strong>Method:</strong> Home Delivery</p>
-                <p><strong>Address:</strong><br>
-                ${order.deliveryAddress.street}<br>
-                ${order.deliveryAddress.city}, ${order.deliveryAddress.state}
-                ${order.deliveryAddress.postalCode ? ', ' + order.deliveryAddress.postalCode : ''}</p>
-            ` : `
-                <p><strong>Method:</strong> Pickup from Store</p>
-                <p>Please collect from our location</p>
-            `;
-            document.getElementById('deliveryInfo').innerHTML = deliveryHTML;
+            try {
+                console.log('Displaying order:', order);
+                
+                // Display order ID and date
+                document.getElementById('displayOrderId').textContent = order.orderId || order.id || 'N/A';
+                document.getElementById('displayOrderDate').textContent = 
+                    'Placed on ' + new Date(order.timestamp || order.createdAt).toLocaleString();
+                
+                // Display status timeline
+                displayTimeline(order);
+                
+                // Display customer info - handle both nested and flat structures
+                const customerName = order.customer?.name || order.customerName || 'N/A';
+                const customerEmail = order.customer?.email || order.customerEmail || 'N/A';
+                const customerPhone = order.customer?.phone || order.customerPhone || 'N/A';
+                
+                document.getElementById('customerInfo').innerHTML = `
+                    <p><strong>Name:</strong> ${customerName}</p>
+                    <p><strong>Email:</strong> ${customerEmail}</p>
+                    <p><strong>Phone:</strong> ${customerPhone}</p>
+                `;
+                
+                // Display delivery info - handle missing deliveryAddress
+                const deliveryAddress = order.deliveryAddress || {};
+                const deliveryHTML = order.deliveryMethod === 'delivery' ? `
+                    <p><strong>Method:</strong> Home Delivery</p>
+                    <p><strong>Address:</strong><br>
+                    ${deliveryAddress.street || 'N/A'}<br>
+                    ${deliveryAddress.city || 'N/A'}, ${deliveryAddress.state || 'N/A'}
+                    ${deliveryAddress.postalCode ? ', ' + deliveryAddress.postalCode : ''}</p>
+                ` : `
+                    <p><strong>Method:</strong> Pickup from Store</p>
+                    <p>Please collect from our location</p>
+                `;
+                document.getElementById('deliveryInfo').innerHTML = deliveryHTML;
             
             // Display items
             const itemsHTML = order.items.map(item => `
@@ -482,6 +490,13 @@
             
             // Display total
             document.getElementById('totalAmount').textContent = '₦' + formatNumber(order.total);
+            
+            console.log('Order displayed successfully!');
+            } catch (error) {
+                console.error('Error displaying order:', error);
+                document.getElementById('errorText').textContent = 'Error displaying order details: ' + error.message;
+                document.getElementById('errorMessage').classList.add('show');
+            }
         }
 
         function displayTimeline(order) {
