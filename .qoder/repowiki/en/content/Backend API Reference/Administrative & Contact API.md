@@ -10,14 +10,17 @@
 - [src/utils/logger.js](file://src/utils/logger.js)
 - [package.json](file://package.json)
 - [orders-data.json](file://orders-data.json)
+- [orders.html](file://orders.html)
+- [database/db.js](file://database/db.js)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Enhanced order deletion process with improved TOTP authentication and better error handling
-- Added debug endpoint for TOTP configuration status visibility
-- Improved logging capabilities for debugging TOTP issues
-- Enhanced security measures for order deletion operations
+- Enhanced order deletion security with simplified TOTP authentication using dedicated single-purpose secret
+- Implemented unified TOTP secret approach for order deletion operations
+- Improved authentication flow with streamlined TOTP verification process
+- Updated order deletion endpoint to use centralized TOTP_SECRET_DELETE constant
+- Enhanced security measures for order deletion operations with dedicated secret
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -163,7 +166,7 @@ Practical Example
 ### Order Management Endpoints
 - Purpose: Manage orders, track status, update delivery status, delete orders (with TOTP), create orders via Gym Master, and verify payments.
 
-**Updated** Enhanced order deletion process with improved TOTP authentication, better error handling, and debug logging capabilities.
+**Updated** Enhanced order deletion process with simplified TOTP authentication using dedicated single-purpose secret approach.
 
 Endpoints
 - GET /api/orders
@@ -251,24 +254,13 @@ Endpoints
     - 200 OK: { success: true, verified: boolean } or { success: false, verified: false }
     - 500 Internal Server Error: { success: false, error: "Payment verification not configured" }
 
-**Updated** Debug Endpoint for TOTP Configuration Status
-- GET /api/orders/debug
-  - Description: Debug endpoint to check TOTP configuration status and system state.
-  - Authentication: None.
-  - Responses:
-    - 200 OK: { 
-        USE_DB: boolean,
-        DATABASE_ENABLED: string,
-        MONGODB_URI: string,
-        dbConnected: boolean,
-        TOTP_SECRET_ADMIN_set: boolean,
-        TOTP_SECRET_set: boolean,
-        timestamp: string
-      }
-  - Notes: Provides visibility into TOTP configuration status and database connectivity.
+**Updated** Simplified TOTP Authentication Flow
+- The order deletion endpoint now uses a dedicated single-purpose TOTP secret (`TOTP_SECRET_DELETE`) specifically designed for order deletion operations.
+- This eliminates the need for separate TOTP secrets for different operations and simplifies the authentication flow.
+- The unified approach ensures that order deletion requires only one valid TOTP code regardless of the underlying storage mechanism (file or database).
 
 Security and Access Controls
-- Order deletion requires TOTP verification via header.
+- Order deletion requires TOTP verification via header using the dedicated `TOTP_SECRET_DELETE`.
 - Status updates are open but can trigger automated emails.
 - Payment verification requires Paystack secret key.
 - Enhanced error handling with specific error messages for different failure scenarios.
@@ -283,7 +275,7 @@ Practical Example: Order Management Workflow
   2. Server updates status and sends status update email if applicable.
 - Delete order:
   1. Admin calls DELETE /api/orders/:orderId with x-totp-code header.
-  2. Server validates TOTP and deletes order if eligible.
+  2. Server validates TOTP using dedicated secret and deletes order if eligible.
   3. Enhanced logging provides debug information for troubleshooting.
 
 **Section sources**
@@ -455,7 +447,7 @@ Audit Logging
 ## Conclusion
 This API provides a robust foundation for administrative order management, secure two-factor authentication, and customer communication via contact forms. By leveraging rate limiting, input validation, and structured logging, the system maintains reliability and security. Integrations with Gym Master, Paystack, and Brevo enable end-to-end commerce workflows with email notifications and payment verification.
 
-**Updated** Recent enhancements include improved TOTP authentication for order deletion, better error handling with specific error messages, and debug logging capabilities for troubleshooting TOTP configuration issues.
+**Updated** Recent enhancements include improved TOTP authentication for order deletion using a dedicated single-purpose secret approach, better error handling with specific error messages, and debug logging capabilities for troubleshooting TOTP configuration issues.
 
 ## Appendices
 
@@ -519,3 +511,41 @@ Representative order model used across endpoints:
 **Section sources**
 - [orders-data.json:1-66](file://orders-data.json#L1-L66)
 - [src/routes/orders.js:235-252](file://src/routes/orders.js#L235-L252)
+
+### TOTP Authentication Flow
+**Updated** Simplified TOTP Authentication Process
+
+The order deletion process now uses a streamlined authentication flow:
+
+```mermaid
+sequenceDiagram
+participant Client as "Client Application"
+participant Server as "Order Deletion Endpoint"
+participant TOTP as "TOTP Verifier"
+participant Storage as "Order Storage"
+Client->>Server : DELETE /api/orders/ : orderId
+Server->>Server : Extract x-totp-code header
+Server->>TOTP : Verify TOTP code using TOTP_SECRET_DELETE
+TOTP-->>Server : Valid/Invalid
+alt Valid TOTP
+Server->>Storage : Attempt to delete order
+Storage-->>Server : Deletion result
+alt Success
+Server-->>Client : 200 OK - Order deleted
+else Failure
+Server-->>Client : 404 Not Found - Order not found
+end
+else Invalid TOTP
+Server-->>Client : 403 Forbidden - Invalid authentication code
+end
+```
+
+**Diagram sources**
+- [src/routes/orders.js:320-360](file://src/routes/orders.js#L320-L360)
+- [server.js:1320-1387](file://server.js#L1320-L1387)
+
+**Section sources**
+- [src/routes/orders.js:10-11](file://src/routes/orders.js#L10-L11)
+- [src/routes/orders.js:320-360](file://src/routes/orders.js#L320-L360)
+- [server.js:1230-1235](file://server.js#L1230-L1235)
+- [server.js:1320-1387](file://server.js#L1320-L1387)

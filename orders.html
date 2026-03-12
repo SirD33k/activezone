@@ -474,14 +474,14 @@
                         <i class="fas fa-lock"></i> Admin Access
                     </h2>
                     <p style="text-align: center; color: #666; margin-bottom: 30px;">
-                        Enter admin password to access orders
+                        Enter your 6-digit Google Authenticator code to access orders
                     </p>
                     <form id="loginForm" onsubmit="return handleLogin(event);">
                         <div style="margin-bottom: 20px;">
-                            <input type="password" id="adminPassword" required
+                            <input type="text" id="adminPassword" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
                                 autofocus
                                 style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 4px; font-size: 16px;" 
-                                placeholder="Enter password">
+                                placeholder="Enter 6-digit code">
                         </div>
                         <div id="loginError" style="color: #e53935; margin-bottom: 15px; display: none; text-align: center;"></div>
                         <button type="submit" class="btn-primary" 
@@ -498,12 +498,12 @@
 
         function handleLogin(event) {
             event.preventDefault();
-            const password = document.getElementById('adminPassword').value;
+            const totpCode = document.getElementById('adminPassword').value;
             
             fetch(API_BASE + '/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
+                body: JSON.stringify({ totpCode })
             })
             .then(res => res.json())
             .then(result => {
@@ -512,7 +512,7 @@
                     location.reload();
                 } else {
                     const errorDiv = document.getElementById('loginError');
-                    errorDiv.textContent = result.error || 'Incorrect password';
+                    errorDiv.textContent = result.error || 'Invalid authentication code';
                     errorDiv.style.display = 'block';
                     document.getElementById('adminPassword').value = '';
                 }

@@ -19,14 +19,12 @@
 
 ## Update Summary
 **Changes Made**
-- Enhanced security for order deletion TOTP verification with consistent secret configuration
-- Fixed vulnerability where order deletion TOTP used different secret than admin authentication
-- Implemented prioritized TOTP secret configuration: TOTP_SECRET_ADMIN > TOTP_SECRET > default constant
-- Added strict rate limiting for order deletion operations (3 attempts per 15 minutes)
-- Updated TOTP setup interface to support separate secrets for admin login and order deletion
-- Enhanced error logging with comprehensive TOTP configuration status logging
-- Added detailed debug capabilities for authentication attempts and security events
-- Integrated Winston-based logging system for structured error tracking
+- Enhanced security for order deletion with dedicated TOTP_SECRET_DELETE constant
+- Simplified TOTP authentication framework with separate constants for different operations
+- Updated order deletion endpoint to use TOTP_SECRET_DELETE instead of TOTP_SECRET
+- Streamlined authentication process with clearer separation between admin login and order deletion
+- Enhanced security logging and rate limiting for order deletion operations
+- Updated TOTP setup interface to support separate secrets for different administrative functions
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -44,7 +42,7 @@
 13. [Conclusion](#conclusion)
 
 ## Introduction
-This document provides comprehensive API documentation for order management and payment processing endpoints. It covers order creation, payment initiation with dual integration (Gym Master and Paystack), order status updates, payment verification, and webhook-free real-time order tracking. The system now operates with a hybrid database architecture supporting both MongoDB and PostgreSQL with automatic fallback mechanisms, providing scalable document-based storage with graceful degradation capabilities. The latest update focuses on improving database operations with connection waiting logic, enhanced error handling, synchronization between database operations and connection state, and critical security enhancements for order deletion operations.
+This document provides comprehensive API documentation for order management and payment processing endpoints. It covers order creation, payment initiation with dual integration (Gym Master and Paystack), order status updates, payment verification, and webhook-free real-time order tracking. The system now operates with a hybrid database architecture supporting both MongoDB and PostgreSQL with automatic fallback mechanisms, providing scalable document-based storage with graceful degradation capabilities. The latest update focuses on improving database operations with connection waiting logic, enhanced error handling, synchronization between database operations and connection state, and critical security enhancements for order deletion operations with simplified TOTP authentication framework.
 
 ## Project Structure
 The system comprises:
@@ -54,7 +52,7 @@ The system comprises:
 - Payment orchestration with Gym Master and Paystack fallback
 - Centralized email processing with Brevo integration for order notifications
 - Enhanced database abstraction layer with automatic fallback mechanisms and connection synchronization
-- **Enhanced Security**: Separate TOTP secrets for admin authentication and order deletion operations
+- **Enhanced Security**: Separate TOTP secrets for admin authentication and order deletion operations with streamlined authentication process
 - **Comprehensive Logging**: Winston-based structured logging for security events and debugging
 
 ```mermaid
@@ -115,14 +113,14 @@ AdminRoute --> |"Enhanced TOTP Setup"| Logger
 - [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 ## Core Components
-- **Order Management API**: Handles order creation, retrieval, status updates, and deletion with enhanced TOTP protection
+- **Order Management API**: Handles order creation, retrieval, status updates, and deletion with enhanced TOTP protection using dedicated TOTP_SECRET_DELETE constant
 - **Payment Processing API**: Integrates with Gym Master for purchase and Paystack as fallback for payment initiation
 - **Centralized Email Processing**: Enhanced Brevo integration for order confirmation and status update notifications
 - **Verification Endpoint**: Confirms payment status with Paystack and updates order records
 - **Hybrid Database Abstraction**: Unified interface supporting MongoDB and PostgreSQL with automatic fallback to file storage
 - **Enhanced Connection Management**: Sophisticated connection handling with waiting logic and synchronization
 - **Frontend Integration**: Checkout flow, payment success page, order tracking UI, and admin order management
-- **Enhanced Security Framework**: Separate TOTP secrets for different administrative operations with rate limiting
+- **Enhanced Security Framework**: Separate TOTP secrets for different administrative operations with streamlined authentication process
 - **Structured Logging System**: Winston-based logging for comprehensive error tracking and security event monitoring
 
 Key capabilities:
@@ -135,7 +133,7 @@ Key capabilities:
 - Graceful degradation with performance monitoring
 - Structured debugging with detailed console output
 - Enhanced error reporting with stack trace information
-- **Consistent TOTP Security**: Unified secret configuration for administrative operations
+- **Streamlined TOTP Security**: Dedicated TOTP_SECRET_DELETE constant for order deletion operations
 - **Comprehensive Security Logging**: Detailed audit trail of authentication attempts and security events
 
 **Section sources**
@@ -146,7 +144,7 @@ Key capabilities:
 - [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 ## Architecture Overview
-The system supports two payment pathways with a hybrid database architecture featuring MongoDB as the primary database and PostgreSQL as an alternative, with automatic fallback to file-based storage. The latest update enhances database operations with connection waiting logic and synchronization, and introduces critical security enhancements for administrative operations:
+The system supports two payment pathways with a hybrid database architecture featuring MongoDB as the primary database and PostgreSQL as an alternative, with automatic fallback to file-based storage. The latest update enhances database operations with connection waiting logic and synchronization, and introduces critical security enhancements for administrative operations with simplified TOTP authentication framework:
 
 1. **Gym Master purchase API**: Deducts stock and returns a payment URL
 2. **Paystack fallback**: Initializes a transaction when Gym Master does not provide a payment URL
@@ -154,7 +152,7 @@ The system supports two payment pathways with a hybrid database architecture fea
 4. **Enhanced Email Processing**: Brevo integration handles order confirmation and status update emails
 5. **Hybrid Database Operations**: Unified MongoDB and PostgreSQL operations with automatic fallback to file storage
 6. **Connection State Synchronization**: Database operations wait for connection readiness and synchronize with connection state
-7. **Enhanced Security Framework**: Separate TOTP secrets with prioritized configuration for different administrative operations
+7. **Enhanced Security Framework**: Separate TOTP secrets with dedicated TOTP_SECRET_DELETE constant for order deletion operations
 8. **Structured Logging**: Winston-based logging system for comprehensive error tracking and security event monitoring
 
 ```mermaid
@@ -173,7 +171,7 @@ API->>DB : loadOrdersAsync()
 DB-->>API : orders[]
 API-->>OrdersAdmin : {success, orders, pagination}
 OrdersAdmin->>API : DELETE /api/orders/ : orderId (with TOTP)
-API->>API : verify TOTP with prioritized secret
+API->>API : verify TOTP with TOTP_SECRET_DELETE
 API->>Logger : Log TOTP verification attempt
 API->>DB : ensureDbConnected()
 DB-->>API : Connection ready/synced
@@ -184,13 +182,13 @@ API-->>OrdersAdmin : {success, message}
 
 **Diagram sources**
 - [server.js:966-1040](file://server.js#L966-L1040)
-- [server.js:1307-1374](file://server.js#L1307-L1374)
+- [server.js:1320-1387](file://server.js#L1320-L1387)
 - [email.js:211-405](file://src/utils/email.js#L211-L405)
 - [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 **Section sources**
 - [server.js:966-1040](file://server.js#L966-L1040)
-- [server.js:1307-1374](file://server.js#L1307-L1374)
+- [server.js:1320-1387](file://server.js#L1320-L1387)
 - [orders.js:286-331](file://src/routes/orders.js#L286-L331)
 - [email.js:211-405](file://src/utils/email.js#L211-L405)
 - [logger.js:1-67](file://src/utils/logger.js#L1-L67)
@@ -342,8 +340,8 @@ The consolidated approach now includes comprehensive Brevo integration:
 - [server.js:998-1074](file://server.js#L998-L1074)
 - [email.js:211-405](file://src/utils/email.js#L211-L405)
 
-### Order Deletion (Admin) - Enhanced Security
-**Updated** The order deletion endpoint now implements enhanced security with consistent TOTP verification and prioritized secret configuration:
+### Order Deletion (Admin) - Enhanced Security with TOTP_SECRET_DELETE
+**Updated** The order deletion endpoint now implements enhanced security with dedicated TOTP_SECRET_DELETE constant and simplified authentication framework:
 
 - **Method**: DELETE
 - **URL**: `/api/orders/:orderId`
@@ -356,19 +354,20 @@ The consolidated approach now includes comprehensive Brevo integration:
   - `orderId`: string
 
 **Enhanced Security Features**:
-- **Consistent TOTP Secret Configuration**: Uses prioritized secret selection: `TOTP_SECRET_ADMIN` > `TOTP_SECRET` > default constant
+- **Dedicated TOTP Secret**: Uses TOTP_SECRET_DELETE constant specifically for order deletion operations
+- **Streamlined Authentication**: Simplified TOTP verification process with dedicated secret
 - **Strict Rate Limiting**: 3 attempts per 15 minutes to prevent brute force attacks
 - **Enhanced Validation**: Comprehensive input validation and format checking
 - **Separate Authentication Context**: Different TOTP secret than admin login for enhanced security isolation
 
-**Prioritized Secret Configuration**:
-The system now uses a hierarchical approach for TOTP secret selection:
-1. **Primary**: `process.env.TOTP_SECRET_ADMIN` (admin-specific secret)
-2. **Secondary**: `process.env.TOTP_SECRET` (general secret)
-3. **Fallback**: Default constant value
+**TOTP_SECRET_DELETE Constant**:
+The system now uses a dedicated constant for order deletion TOTP verification:
+- **Constant Definition**: `const TOTP_SECRET_DELETE = process.env.TOTP_SECRET_DELETE || 'HBTTGRBVGA3TMKL5MV5DS6KVEVPHE62SJBUXG232EEZXO33NOJ4Q';`
+- **Environment Override**: Can be customized via TOTP_SECRET_DELETE environment variable
+- **Fixed Default**: Provides consistent authentication across deployments
 
 **Behavior**:
-- Validates TOTP code using the prioritized secret configuration
+- Validates TOTP code using TOTP_SECRET_DELETE constant
 - Applies strict rate limiting (3 attempts per 15 minutes)
 - Deletes unpaid orders or pending processing orders
 - Returns success or error with enhanced security logging
@@ -378,9 +377,10 @@ The system now uses a hierarchical approach for TOTP secret selection:
 - **Enhanced Isolation**: Separate TOTP secrets for different administrative operations
 - **Improved Audit Trail**: Detailed logging of TOTP verification attempts
 - **Rate Limiting**: Prevents brute force attacks on order deletion operations
+- **Streamlined Process**: Simplified authentication framework with dedicated constants
 
 **Section sources**
-- [server.js:1307-1374](file://server.js#L1307-L1374)
+- [server.js:1320-1387](file://server.js#L1320-L1387)
 - [orders.js:317-355](file://src/routes/orders.js#L317-L355)
 
 ### Frontend Integration Points
@@ -397,7 +397,7 @@ The system now uses a hierarchical approach for TOTP secret selection:
   - Comprehensive order management with enhanced debugging
   - Real-time order loading with console logging
   - Structured error handling with detailed diagnostics
-  - **Enhanced Security**: TOTP code prompts for order deletion operations
+  - **Enhanced Security**: TOTP code prompts for order deletion operations using dedicated TOTP_SECRET_DELETE
 
 **Enhanced Debugging in orders.html**:
 The orders.html interface now includes extensive console logging for all major operations:
@@ -596,22 +596,22 @@ end
 
 ## Security Enhancements
 
-### Enhanced TOTP Security Framework
-**Updated** The system now implements a comprehensive TOTP security framework with consistent secret configuration and enhanced protection mechanisms:
+### Enhanced TOTP Security Framework with TOTP_SECRET_DELETE
+**Updated** The system now implements a comprehensive TOTP security framework with dedicated TOTP_SECRET_DELETE constant and simplified authentication process:
 
-#### TOTP Secret Configuration Hierarchy
-The system uses a prioritized approach for TOTP secret selection to ensure consistent security across all administrative operations:
+#### TOTP Secret Management
+The system uses dedicated constants for different administrative operations:
 
-1. **Admin-Specific Secret** (`TOTP_SECRET_ADMIN`): Used for admin authentication and order deletion
-2. **General Secret** (`TOTP_SECRET`): Fallback for general administrative operations
-3. **Default Constant**: Final fallback for development and testing environments
+1. **Admin Login Secret** (`TOTP_SECRET_ADMIN`): Used for admin authentication and login
+2. **Order Deletion Secret** (`TOTP_SECRET_DELETE`): Used exclusively for order deletion operations
+3. **General Secret** (`TOTP_SECRET`): Fallback for general administrative operations
 
 **Security Vulnerability Fixed**:
 - **Previous Issue**: Order deletion TOTP used `TOTP_SECRET` while admin authentication used `TOTP_SECRET_ADMIN`
-- **Solution**: Both operations now use the same prioritized secret configuration
-- **Enhanced Security**: Consistent authentication across all administrative operations
+- **Solution**: Order deletion now uses dedicated `TOTP_SECRET_DELETE` constant
+- **Enhanced Security**: Consistent authentication across all administrative operations with streamlined framework
 
-#### Rate Limiting Implementation
+#### Streamlined Authentication Process
 **Enhanced Security Measures**:
 - **Order Deletion**: 3 attempts per 15 minutes (strictest protection)
 - **Admin Login**: 5 attempts per 15 minutes (moderate protection)
@@ -632,12 +632,12 @@ The system uses a prioritized approach for TOTP secret selection to ensure consi
 
 **Section sources**
 - [server.js:396-403](file://server.js#L396-L403)
-- [server.js:1307-1374](file://server.js#L1307-L1374)
+- [server.js:1320-1387](file://server.js#L1320-L1387)
 - [admin.js:28-125](file://src/routes/admin.js#L28-L125)
 - [orders.js:317-355](file://src/routes/orders.js#L317-L355)
 
 ### Enhanced Authentication Security
-**Updated** The authentication system now provides comprehensive security across all administrative operations:
+**Updated** The authentication system now provides comprehensive security across all administrative operations with simplified TOTP framework:
 
 #### Multi-Factor Authentication
 - **Google Authenticator Integration**: Industry-standard 2FA implementation
@@ -658,7 +658,7 @@ The system uses a prioritized approach for TOTP secret selection to ensure consi
 - **Backup Options**: Manual secret entry for QR code failures
 
 **Section sources**
-- [server.js:1307-1374](file://server.js#L1307-L1374)
+- [server.js:1320-1387](file://server.js#L1320-L1387)
 - [admin.js:28-125](file://src/routes/admin.js#L28-L125)
 - [orders.html:876-909](file://orders.html#L876-L909)
 
@@ -841,7 +841,7 @@ Common issues and resolutions:
   - Ensure correct order reference is used; references are order IDs
 - **TOTP authentication failures**:
   - **Enhanced Security**: Verify Google Authenticator codes match the configured secrets; check time synchronization
-  - **Priority Configuration**: Ensure `TOTP_SECRET_ADMIN` is properly configured for order deletion operations
+  - **TOTP_SECRET_DELETE**: Ensure `TOTP_SECRET_DELETE` environment variable is properly configured for order deletion operations
   - **Rate Limiting**: Check if rate limit has been exceeded (3 attempts per 15 minutes)
 - **Database operation failures**:
   - Check MongoDB/PostgreSQL connectivity and authentication
@@ -857,7 +857,7 @@ Common issues and resolutions:
   - **Notification System**: Monitor success/error notifications for immediate feedback on operations
 
 **Security and fraud prevention**:
-- **Enhanced TOTP**: Separate secrets for different administrative operations with prioritized configuration
+- **Enhanced TOTP**: Separate secrets for different administrative operations with streamlined framework
 - **Rate limiting**: Protection against brute force attacks on all administrative operations
 - **HTTPS enforcement**: Security best practices for production deployments
 - **Input validation**: Comprehensive validation using express-validator
@@ -890,11 +890,11 @@ Common issues and resolutions:
 - **Performance Optimization**: Connection pooling and sharing between components
 
 **Enhanced Security Benefits**:
-- **Consistent Authentication**: Unified TOTP secret configuration across all administrative operations
-- **Hierarchical Security**: Priority-based secret configuration with fallback mechanisms
+- **Streamlined Authentication**: Dedicated TOTP_SECRET_DELETE constant for order deletion operations
+- **Separate Security Contexts**: Different TOTP secrets for different administrative functions
 - **Rate Limiting Protection**: Prevents brute force attacks on sensitive operations
 - **Audit Trail**: Complete logging of all security-related events
-- **Isolation**: Separate TOTP secrets for different administrative functions
+- **Isolation**: Enhanced security through separate authentication mechanisms
 
 **Structured Logging Benefits**:
 - **Comprehensive Error Tracking**: Systematic logging of all application events and errors
@@ -912,9 +912,9 @@ Common issues and resolutions:
 - [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 ## Conclusion
-The Order & Payment Processing API provides a robust, dual-provider payment solution integrated with Gym Master and Paystack, supporting order lifecycle management, real-time tracking, and automated email notifications. The latest update significantly enhances database operations with connection waiting logic, improved error handling, and synchronization between database operations and connection state, while introducing critical security enhancements for administrative operations.
+The Order & Payment Processing API provides a robust, dual-provider payment solution integrated with Gym Master and Paystack, supporting order lifecycle management, real-time tracking, and automated email notifications. The latest update significantly enhances database operations with connection waiting logic, improved error handling, and synchronization between database operations and connection state, while introducing critical security enhancements for administrative operations with simplified TOTP authentication framework.
 
-The system emphasizes security through enhanced TOTP verification with consistent secret configuration, prioritized authentication mechanisms, strict rate limiting, and comprehensive audit logging. The vulnerability where order deletion TOTP used different secret than admin authentication has been completely resolved through the implementation of a hierarchical TOTP secret configuration that prioritizes `TOTP_SECRET_ADMIN` for order deletion operations.
+The system emphasizes security through enhanced TOTP verification with dedicated TOTP_SECRET_DELETE constant, streamlined authentication mechanisms, strict rate limiting, and comprehensive audit logging. The vulnerability where order deletion TOTP used different secret than admin authentication has been completely resolved through the implementation of a dedicated TOTP_SECRET_DELETE constant that provides consistent authentication security across all administrative operations.
 
 The hybrid database architecture supporting both MongoDB and PostgreSQL with automatic fallback mechanisms provides improved reliability and maintainability. The enhanced database connection management ensures reliable operation even under connection stress, with sophisticated synchronization mechanisms preventing race conditions and ensuring data consistency.
 
@@ -924,4 +924,4 @@ The new Winston-based structured logging system provides comprehensive error tra
 
 The frontend pages integrate seamlessly with backend endpoints to deliver a smooth customer experience from order placement to delivery confirmation. The enhanced error handling and debugging infrastructure, combined with the new security framework and structured logging system, makes the system more maintainable, secure, and easier to troubleshoot in production environments.
 
-**Updated** The consolidation of order status update functionality and centralization of email processing in server.js, combined with the enhanced database connection handling, synchronization mechanisms, and critical security enhancements for TOTP verification, represents a significant improvement in system architecture, providing better maintainability, reliability, security, and scalability for order management operations with enhanced connection state management, graceful fallback capabilities, consistent authentication security across all administrative functions, and comprehensive structured logging for systematic debugging and monitoring.
+**Updated** The consolidation of order status update functionality and centralization of email processing in server.js, combined with the enhanced database connection handling, synchronization mechanisms, and critical security enhancements for TOTP verification with dedicated TOTP_SECRET_DELETE constant, represents a significant improvement in system architecture, providing better maintainability, reliability, security, and scalability for order management operations with enhanced connection state management, graceful fallback capabilities, streamlined TOTP authentication framework, and comprehensive structured logging for systematic debugging and monitoring.
