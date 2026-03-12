@@ -28,6 +28,8 @@ router.get('/debug', (req, res) => {
         DATABASE_ENABLED: process.env.DATABASE_ENABLED,
         MONGODB_URI: process.env.MONGODB_URI ? 'set (hidden)' : 'not set',
         dbConnected: !!db,
+        TOTP_SECRET_ADMIN_set: !!process.env.TOTP_SECRET_ADMIN,
+        TOTP_SECRET_set: !!process.env.TOTP_SECRET,
         timestamp: new Date().toISOString()
     });
 });
@@ -334,6 +336,11 @@ router.delete('/:orderId', async (req, res) => {
     });
 
     if (!isValid) {
+        const secretUsed = process.env.TOTP_SECRET_ADMIN || process.env.TOTP_SECRET || TOTP_SECRET;
+        console.log(Invalid TOTP code attempted for order );
+        console.log(Secret being used: ... (length: ));
+        console.log(TOTP_SECRET_ADMIN set: );
+        console.log(TOTP_SECRET set: );
         console.log(`Invalid TOTP code attempted for order ${orderId}`);
         return res.status(403).json({ success: false, error: 'Invalid authentication code' });
     }
