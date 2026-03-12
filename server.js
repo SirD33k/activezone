@@ -333,16 +333,10 @@ if (!PAYSTACK_SECRET_KEY) {
 }
 
 // TOTP Configuration for order deletion
-const TOTP_SECRET = process.env.TOTP_SECRET || speakeasy.generateSecret({
-    name: 'Active Zone Hub - Order Management',
-    issuer: 'Active Zone Hub'
-}).base32;
+const TOTP_SECRET = process.env.TOTP_SECRET || 'HBTTGRBVGA3TMKL5MV5DS6KVEVPHE62SJBUXG232EEZXO33NOJ4Q';
 
 // TOTP Configuration for admin login
-const TOTP_SECRET_ADMIN = process.env.TOTP_SECRET_ADMIN || speakeasy.generateSecret({
-    name: 'Active Zone Hub - Admin Login',
-    issuer: 'Active Zone Hub'
-}).base32;
+const TOTP_SECRET_ADMIN = process.env.TOTP_SECRET_ADMIN || 'HBDUOXSANF5GWURYEQ2UY6T2OJDU6RZUF5EHEMDLGJYGK2Z6JBJA';
 
 // Log TOTP secrets on startup (for initial setup)
 if (!process.env.TOTP_SECRET || !process.env.TOTP_SECRET_ADMIN) {

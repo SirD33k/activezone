@@ -4,24 +4,36 @@ const QRCode = require('qrcode');
 const speakeasy = require('speakeasy');
 const { body, validationResult } = require('express-validator');
 
-const TOTP_SECRET = process.env.TOTP_SECRET || speakeasy.generateSecret({ name: 'Active Zone Hub', issuer: 'Active Zone Hub' }).base32;
-const TOTP_SECRET_ADMIN = process.env.TOTP_SECRET_ADMIN || speakeasy.generateSecret({ name: 'Active Zone Hub - Admin', issuer: 'Active Zone Hub' }).base32;
+const TOTP_SECRET = process.env.TOTP_SECRET || 'HBTTGRBVGA3TMKL5MV5DS6KVEVPHE62SJBUXG232EEZXO33NOJ4Q';
+const TOTP_SECRET_ADMIN = process.env.TOTP_SECRET_ADMIN || 'HBDUOXSANF5GWURYEQ2UY6T2OJDU6RZUF5EHEMDLGJYGK2Z6JBJA';
 
 router.post('/login', [
-    body('password').trim().notEmpty().withMessage('Password is required'),
+    body('totpCode').trim().notEmpty().withMessage('TOTP code is required'),
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ success: false, error: errors.array()[0].msg });
     }
 
-    const { password } = req.body;
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ActiveZone@2026';
+    const { totpCode } = req.body;
+    
+    // Validate 6-digit format
+    if (!/^\d{6}$/.test(totpCode)) {
+        return res.status(400).json({ success: false, error: 'Invalid code format - must be 6 digits' });
+    }
+    
+    // Verify TOTP code
+    const isValid = speakeasy.totp.verify({
+        secret: TOTP_SECRET_ADMIN,
+        encoding: 'base32',
+        token: totpCode,
+        window: 2
+    });
 
-    if (password === ADMIN_PASSWORD) {
+    if (isValid) {
         res.json({ success: true, message: 'Login successful' });
     } else {
-        res.status(401).json({ success: false, error: 'Invalid password' });
+        res.status(401).json({ success: false, error: 'Invalid authentication code' });
     }
 });
 
