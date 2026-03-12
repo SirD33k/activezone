@@ -3574,3 +3574,226 @@ img[loading="lazy"] {
     text-decoration: underline;
   }
 }
+
+/* ============================================
+   ENHANCED MOBILE RESPONSIVENESS
+   ============================================ */
+
+/* Small phones (up to 480px) */
+@media (max-width: 480px) {
+  /* Hero Section - Fix oversized button */
+  .hero-cta {
+    bottom: 60px;
+    width: 100%;
+    text-align: center;
+    padding: 0 15px;
+  }
+
+  .btn-large {
+    padding: 12px 30px;
+    font-size: 0.9rem;
+    width: auto;
+    max-width: 200px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 10px 24px;
+    font-size: 0.85rem;
+  }
+
+  /* Contact Page Mobile Fixes */
+  .contact-page {
+    padding: 40px 0;
+  }
+
+  .contact-page h2 {
+    font-size: 1.8rem;
+    padding: 0 10px;
+  }
+
+  .section-subtitle {
+    font-size: 0.9rem;
+    padding: 0 15px;
+  }
+
+  .contact-grid {
+    margin-top: 30px;
+    gap: 20px;
+  }
+
+  .contact-form-wrapper {
+    padding: 20px 15px;
+  }
+
+  .contact-form-wrapper h3 {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+  }
+
+  .contact-form input,
+  .contact-form textarea {
+    padding: 12px 15px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .contact-form textarea {
+    min-height: 100px;
+  }
+
+  .btn-submit {
+    padding: 14px 30px;
+    font-size: 0.9rem;
+  }
+
+  .contact-info-wrapper {
+    padding: 20px 15px;
+  }
+
+  .contact-info-wrapper h3 {
+    font-size: 1.4rem;
+  }
+
+  .quick-actions {
+    gap: 10px;
+  }
+
+  .action-btn {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+
+  .contact-item {
+    padding: 12px;
+  }
+
+  .contact-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Page headers */
+  .page-header h1 {
+    font-size: 2rem;
+  }
+
+  /* Carousel content */
+  .carousel-content h1 {
+    font-size: 1.6rem;
+  }
+
+  .carousel-content p {
+    font-size: 0.9rem;
+  }
+
+  /* Footer */
+  .footer-content {
+    padding: 40px 15px;
+  }
+
+  .footer-section h4 {
+    font-size: 1.1rem;
+  }
+
+  /* Services cards */
+  .service-card {
+    padding: 20px 15px;
+  }
+
+  /* Form inputs - prevent zoom */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Better touch targets */
+  .nav-links a,
+  button,
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    min-height: 44px;
+  }
+}
+
+/* Medium phones (481px to 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .hero-cta {
+    bottom: 80px;
+  }
+
+  .btn-large {
+    padding: 14px 40px;
+    font-size: 1rem;
+  }
+
+  .contact-form-wrapper,
+  .contact-info-wrapper {
+    padding: 25px 20px;
+  }
+
+  /* Form inputs - prevent zoom */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Landscape orientation fixes */
+@media (max-width: 768px) and (orientation: landscape) {
+  .hero-cta {
+    bottom: 30px;
+  }
+
+  .carousel-content {
+    padding: 20px;
+  }
+
+  .carousel-content h1 {
+    font-size: 1.5rem;
+  }
+
+  .carousel-content p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase tap targets */
+  .nav-links a {
+    padding: 12px 16px;
+  }
+
+  .action-btn {
+    min-height: 48px;
+  }
+
+  /* Remove hover effects on touch */
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-outline:hover,
+  .service-card:hover {
+    transform: none;
+  }
+
+  /* Active states for touch */
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .service-card:active {
+    transform: scale(0.99);
+  }
+}
