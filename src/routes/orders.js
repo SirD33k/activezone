@@ -328,20 +328,20 @@ router.delete('/:orderId', async (req, res) => {
         return res.status(400).json({ success: false, error: 'Invalid code format' });
     }
 
+    // Use TOTP_SECRET_ADMIN (same as admin login) with fallback to TOTP_SECRET
+    const totpSecret = process.env.TOTP_SECRET_ADMIN || process.env.TOTP_SECRET || TOTP_SECRET;
+    
     const isValid = speakeasy.totp.verify({
-        secret: process.env.TOTP_SECRET_ADMIN || process.env.TOTP_SECRET || TOTP_SECRET,
+        secret: totpSecret,
         encoding: 'base32',
         token: totpCode,
         window: 2
     });
 
     if (!isValid) {
-        const secretUsed = process.env.TOTP_SECRET_ADMIN || process.env.TOTP_SECRET || TOTP_SECRET;
-        console.log(Invalid TOTP code attempted for order );
-        console.log(Secret being used: ... (length: ));
-        console.log(TOTP_SECRET_ADMIN set: );
-        console.log(TOTP_SECRET set: );
         console.log(`Invalid TOTP code attempted for order ${orderId}`);
+        console.log(`TOTP_SECRET_ADMIN set: ${!!process.env.TOTP_SECRET_ADMIN}`);
+        console.log(`TOTP_SECRET set: ${!!process.env.TOTP_SECRET}`);
         return res.status(403).json({ success: false, error: 'Invalid authentication code' });
     }
 
