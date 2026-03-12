@@ -327,7 +327,7 @@ router.delete('/:orderId', async (req, res) => {
     }
 
     const isValid = speakeasy.totp.verify({
-        secret: TOTP_SECRET,
+        secret: process.env.TOTP_SECRET_ADMIN || process.env.TOTP_SECRET || TOTP_SECRET,
         encoding: 'base32',
         token: totpCode,
         window: 2
