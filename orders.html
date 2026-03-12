@@ -717,7 +717,7 @@
                             <i class="fas fa-trash"></i> Delete Unpaid Order
                         </button>
                         <p style="margin-top: 10px; font-size: 11px; color: #666; text-align: center;">
-                            <i class="fas fa-shield-alt"></i> Requires Google Authenticator verification
+                            <i class="fas fa-shield-alt"></i> Requires admin password
                         </p>
                     </div>
                     ` : ''}
@@ -874,19 +874,19 @@
             }, 5000);
         }
 
-        // Delete order with TOTP verification
+        // Delete order with admin password
         async function deleteOrder(orderId) {
-            // Prompt for TOTP code
-            const totpCode = prompt('🔒 Google Authenticator Code Required\n\nEnter your 6-digit authentication code to delete this order:', '');
+            // Prompt for admin password
+            const adminPassword = prompt('🔒 Admin Password Required\n\nEnter admin password to delete this order:', '');
             
-            if (!totpCode) {
+            if (!adminPassword) {
                 return; // User cancelled
             }
             
-            if (!/^\d{6}$/.test(totpCode)) {
-                showNotification('❌ Invalid code format. Must be 6 digits.', 'error');
-                return;
-            }
+
+
+
+
             
             if (!confirm(`Are you sure you want to delete order ${orderId}?\n\nThis action cannot be undone!`)) {
                 return;
@@ -897,7 +897,7 @@
                     method: 'DELETE',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'X-TOTP-Code': totpCode
+                        'X-Admin-Password': adminPassword
                     }
                 });
                 
