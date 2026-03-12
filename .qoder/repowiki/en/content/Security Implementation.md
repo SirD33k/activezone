@@ -16,11 +16,11 @@
 
 ## Update Summary
 **Changes Made**
-- Enhanced order deletion security with TOTP verification for admin operations
-- Implemented separate TOTP secrets for admin login and order deletion workflows
-- Added comprehensive rate limiting for order deletion operations
-- Improved authentication flow consistency for order management operations
-- Enhanced frontend TOTP integration for order deletion confirmation
+- Enhanced order deletion security with prioritized TOTP secret selection (TOTP_SECRET_ADMIN > TOTP_SECRET > default)
+- Improved TOTP authentication logic with better fallback mechanisms and comprehensive logging for debugging
+- Enhanced frontend TOTP integration with improved error handling and user feedback
+- Strengthened rate limiting for order deletion operations with enhanced validation
+- Updated TOTP configuration with improved secret generation and fallback handling
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -74,6 +74,7 @@ Server --> Package["Dependencies<br/>package.json"]
 - **Advanced Two-Factor Authentication (2FA)**
   - TOTP-based 2FA implemented with separate secrets for admin login and order deletion workflows.
   - QR code setup for Google Authenticator with distinct accounts for each function.
+  - **Updated**: Enhanced TOTP secret selection with prioritized fallback mechanism (TOTP_SECRET_ADMIN > TOTP_SECRET > default).
 - **Comprehensive Rate Limiting**
   - Express-rate-limit applied with specific configurations: admin login (5 attempts/15min), order deletion (3 attempts/15min), general API (100 requests/min).
 - **Robust Input Validation**
@@ -163,16 +164,19 @@ Server-->>Client : {success,token,memberId}
 - **Separate TOTP Secrets**
   - Distinct secrets for admin login (TOTP_SECRET_ADMIN) and order deletion (TOTP_SECRET) are generated or loaded from environment variables.
   - QR code setup for Google Authenticator with separate accounts for each function.
-- **Order Deletion Security Enhancement**
+- **Enhanced Order Deletion Security**
+  - **Updated**: Uses prioritized secret selection with fallback mechanism: TOTP_SECRET_ADMIN > TOTP_SECRET > default.
   - Requires a valid TOTP code passed via a custom header ('x-totp-code'); enforced with regex validation and time-based token verification with 60-second window tolerance.
-  - Enhanced frontend integration prompts users for TOTP code before deletion confirmation.
+  - Enhanced frontend integration prompts users for TOTP code before deletion confirmation with improved error handling.
+  - Comprehensive logging for debugging purposes including secret availability checks and validation attempts.
 
 ```mermaid
 flowchart TD
 Start(["Admin Requests Order Deletion"]) --> RequireHeader["Require 'x-totp-code' Header"]
 RequireHeader --> ValidateFormat{"6-digit numeric?"}
 ValidateFormat --> |No| Reject["Reject 400 Bad Request"]
-ValidateFormat --> |Yes| VerifyTOTP["Verify TOTP against secret<br/>window: 2 (60 seconds)"]
+ValidateFormat --> |Yes| SelectSecret["Select TOTP Secret<br/>Priority: TOTP_SECRET_ADMIN > TOTP_SECRET > Default"]
+SelectSecret --> VerifyTOTP["Verify TOTP against selected secret<br/>window: 2 (60 seconds)"]
 VerifyTOTP --> Valid{"Valid?"}
 Valid --> |No| Deny["Reject 403 Forbidden"]
 Valid --> |Yes| CheckOrder["Check Order Status"]
@@ -203,6 +207,7 @@ Block --> End
 - **Admin Login Rate Limiter**
   - Strict limit of 5 attempts per 15 minutes to protect admin login from brute-force attacks.
 - **Order Deletion Rate Limiter**
+  - **Updated**: Enhanced rate limiter with improved validation and logging for order deletion endpoint.
   - Strict limit of 3 attempts per 15 minutes to protect order deletion endpoint.
 - **General API Rate Limiter**
   - Moderate limit of 100 requests per minute to prevent abuse across all API routes.
@@ -336,7 +341,7 @@ Log --> Respond["Send Safe Error Response"]
 ### Security Headers and HTTPS Enforcement
 - **Current State**
   - No explicit security headers are set in the server.
-  - HTTPS enforcement is not implemented in the current server code.
+  - HTTPS enforcement is implemented with automatic redirection in production environments.
 - **Recommendations**
   - Add security headers (e.g., Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy).
   - Enforce HTTPS using reverse proxy or HSTS headers in production deployments.
@@ -412,7 +417,8 @@ Brevo["@getbrevo/brevo"] --> Server
 - **Authentication Failures**
   - Verify Gym Master API keys and endpoints; check decoded JWT payload extraction logs.
 - **2FA Issues**
-  - Confirm TOTP secret configuration and time synchronization; review QR setup page for separate admin and order deletion accounts.
+  - **Updated**: Confirm TOTP secret configuration and time synchronization; review QR setup page for separate admin and order deletion accounts.
+  - Check prioritized secret selection logs (TOTP_SECRET_ADMIN > TOTP_SECRET > default).
 - **Rate Limit Exceeded**
   - Adjust rate limiter windows and max values; monitor client-side retry behavior.
 - **CORS Errors**
@@ -426,7 +432,11 @@ Brevo["@getbrevo/brevo"] --> Server
 - [logger.js:10-48](file://src/utils/logger.js#L10-L48)
 
 ## Conclusion
-Active Zone Hub implements comprehensive layered security controls including enhanced input validation, sophisticated rate limiting, advanced 2FA with separate authentication codes, and robust logging. The system now features specific rate limiting configurations (5 attempts/15min for admin login, 3 attempts/15min for order deletion, 100 requests/min for general API) and separate TOTP secrets for different functions. Recent security enhancements include improved order deletion functionality with TOTP verification, enhanced authentication flow consistency, and strengthened frontend integration for order management operations. To strengthen the system further, enforce HTTPS, add security headers, harden CORS, implement CSRF protection, and refine error handling to prevent information leakage. Regular audits, vulnerability assessments, and incident response procedures will further enhance operational security.
+Active Zone Hub implements comprehensive layered security controls including enhanced input validation, sophisticated rate limiting, advanced 2FA with separate authentication codes, and robust logging. The system now features specific rate limiting configurations (5 attempts/15min for admin login, 3 attempts/15min for order deletion, 100 requests/min for general API) and separate TOTP secrets for different functions. Recent security enhancements include improved order deletion functionality with TOTP verification, enhanced authentication flow consistency, and strengthened frontend integration for order management operations.
+
+**Updated**: The most significant enhancement is the prioritized TOTP secret selection mechanism for order deletion, which now follows the hierarchy: TOTP_SECRET_ADMIN > TOTP_SECRET > default. This provides better fallback capabilities and improved debugging through comprehensive logging of secret availability and validation attempts. The frontend integration has been enhanced with improved error handling and user feedback for TOTP authentication.
+
+To strengthen the system further, enforce HTTPS, add security headers, harden CORS, implement CSRF protection, and refine error handling to prevent information leakage. Regular audits, vulnerability assessments, and incident response procedures will further enhance operational security.
 
 ## Appendices
 - **Security Checklist**
@@ -439,3 +449,5 @@ Active Zone Hub implements comprehensive layered security controls including enh
   - Regularly review and update TOTP secrets and authentication procedures.
   - Implement monitoring for suspicious TOTP usage patterns.
   - Validate order deletion authorization flows and audit trails.
+  - **Updated**: Verify TOTP secret priority configuration and fallback mechanisms.
+  - **Updated**: Test frontend TOTP integration with enhanced error handling.

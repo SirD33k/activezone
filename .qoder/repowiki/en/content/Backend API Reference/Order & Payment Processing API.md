@@ -8,6 +8,7 @@
 - [checkout.js](file://src/checkout.js)
 - [email.js](file://src/utils/email.js)
 - [admin.js](file://src/routes/admin.js)
+- [logger.js](file://src/utils/logger.js)
 - [payment-success.html](file://payment-success.html)
 - [track-order.html](file://track-order.html)
 - [orders.html](file://orders.html)
@@ -23,6 +24,9 @@
 - Implemented prioritized TOTP secret configuration: TOTP_SECRET_ADMIN > TOTP_SECRET > default constant
 - Added strict rate limiting for order deletion operations (3 attempts per 15 minutes)
 - Updated TOTP setup interface to support separate secrets for admin login and order deletion
+- Enhanced error logging with comprehensive TOTP configuration status logging
+- Added detailed debug capabilities for authentication attempts and security events
+- Integrated Winston-based logging system for structured error tracking
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -51,6 +55,7 @@ The system comprises:
 - Centralized email processing with Brevo integration for order notifications
 - Enhanced database abstraction layer with automatic fallback mechanisms and connection synchronization
 - **Enhanced Security**: Separate TOTP secrets for admin authentication and order deletion operations
+- **Comprehensive Logging**: Winston-based structured logging for security events and debugging
 
 ```mermaid
 graph TB
@@ -66,6 +71,7 @@ OrdersRoute["Orders Routes<br/>src/routes/orders.js"]
 PaymentRoute["Payment Routes<br/>src/routes/payment.js"]
 EmailUtils["Email Utilities<br/>src/utils/email.js"]
 AdminRoute["Admin Routes<br/>src/routes/admin.js"]
+Logger["Winston Logger<br/>src/utils/logger.js"]
 DB["Hybrid Database Abstraction<br/>MongoDB + PostgreSQL + Fallback"]
 Paystack["Paystack API"]
 GymMaster["Gym Master API"]
@@ -75,6 +81,7 @@ Server --> |"POST /api/v2/products"| GymMaster
 Server --> |"Initialize Paystack"| Paystack
 Server --> |"Save Order"| DB
 Server --> |"Centralized Email Processing"| EmailUtils
+Server --> |"Enhanced Logging"| Logger
 Success --> |"GET /api/verify-payment/:reference"| Server
 Server --> |"Verify Paystack"| Paystack
 Server --> |"Update Order Status"| DB
@@ -85,8 +92,10 @@ OrdersAdmin --> |"PATCH /api/orders/:orderId/status"| Server
 OrdersAdmin --> |"DELETE /api/orders/:orderId"| Server
 OrdersRoute --> |"GET /api/orders"| Server
 OrdersRoute --> |"DELETE /api/orders/:orderId"| Server
+OrdersRoute --> |"Enhanced Debug Logging"| Logger
 PaymentRoute --> |"POST /api/purchase"| Server
 AdminRoute --> |"GET /api/admin/setup"| Server
+AdminRoute --> |"Enhanced TOTP Setup"| Logger
 ```
 
 **Diagram sources**
@@ -95,6 +104,7 @@ AdminRoute --> |"GET /api/admin/setup"| Server
 - [payment.js:1-154](file://src/routes/payment.js#L1-L154)
 - [admin.js:1-128](file://src/routes/admin.js#L1-L128)
 - [email.js:1-412](file://src/utils/email.js#L1-L412)
+- [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 **Section sources**
 - [server.js:1-2328](file://server.js#L1-L2328)
@@ -102,6 +112,7 @@ AdminRoute --> |"GET /api/admin/setup"| Server
 - [payment.js:1-154](file://src/routes/payment.js#L1-L154)
 - [admin.js:1-128](file://src/routes/admin.js#L1-L128)
 - [email.js:1-412](file://src/utils/email.js#L1-L412)
+- [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 ## Core Components
 - **Order Management API**: Handles order creation, retrieval, status updates, and deletion with enhanced TOTP protection
@@ -112,6 +123,7 @@ AdminRoute --> |"GET /api/admin/setup"| Server
 - **Enhanced Connection Management**: Sophisticated connection handling with waiting logic and synchronization
 - **Frontend Integration**: Checkout flow, payment success page, order tracking UI, and admin order management
 - **Enhanced Security Framework**: Separate TOTP secrets for different administrative operations with rate limiting
+- **Structured Logging System**: Winston-based logging for comprehensive error tracking and security event monitoring
 
 Key capabilities:
 - Dual payment provider orchestration
@@ -124,12 +136,14 @@ Key capabilities:
 - Structured debugging with detailed console output
 - Enhanced error reporting with stack trace information
 - **Consistent TOTP Security**: Unified secret configuration for administrative operations
+- **Comprehensive Security Logging**: Detailed audit trail of authentication attempts and security events
 
 **Section sources**
 - [server.js:1767-2025](file://server.js#L1767-L2025)
 - [orders.js:286-331](file://src/routes/orders.js#L286-L331)
 - [admin.js:1-128](file://src/routes/admin.js#L1-L128)
 - [email.js:1-412](file://src/utils/email.js#L1-L412)
+- [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 ## Architecture Overview
 The system supports two payment pathways with a hybrid database architecture featuring MongoDB as the primary database and PostgreSQL as an alternative, with automatic fallback to file-based storage. The latest update enhances database operations with connection waiting logic and synchronization, and introduces critical security enhancements for administrative operations:
@@ -141,6 +155,7 @@ The system supports two payment pathways with a hybrid database architecture fea
 5. **Hybrid Database Operations**: Unified MongoDB and PostgreSQL operations with automatic fallback to file storage
 6. **Connection State Synchronization**: Database operations wait for connection readiness and synchronize with connection state
 7. **Enhanced Security Framework**: Separate TOTP secrets with prioritized configuration for different administrative operations
+8. **Structured Logging**: Winston-based logging system for comprehensive error tracking and security event monitoring
 
 ```mermaid
 sequenceDiagram
@@ -149,6 +164,7 @@ participant OrdersAdmin as "Orders Admin<br/>orders.html"
 participant API as "Express Server<br/>server.js"
 participant DB as "Hybrid Database<br/>MongoDB/PostgreSQL"
 participant Email as "Brevo Email Service"
+participant Logger as "Winston Logger"
 Client->>OrdersAdmin : Load orders page
 OrdersAdmin->>API : GET /api/orders?page=&limit=&status=&search=
 API->>DB : ensureDbConnected()
@@ -158,6 +174,7 @@ DB-->>API : orders[]
 API-->>OrdersAdmin : {success, orders, pagination}
 OrdersAdmin->>API : DELETE /api/orders/ : orderId (with TOTP)
 API->>API : verify TOTP with prioritized secret
+API->>Logger : Log TOTP verification attempt
 API->>DB : ensureDbConnected()
 DB-->>API : Connection ready/synced
 API->>DB : deleteOrder()
@@ -169,12 +186,14 @@ API-->>OrdersAdmin : {success, message}
 - [server.js:966-1040](file://server.js#L966-L1040)
 - [server.js:1307-1374](file://server.js#L1307-L1374)
 - [email.js:211-405](file://src/utils/email.js#L211-L405)
+- [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 **Section sources**
 - [server.js:966-1040](file://server.js#L966-L1040)
 - [server.js:1307-1374](file://server.js#L1307-L1374)
 - [orders.js:286-331](file://src/routes/orders.js#L286-L331)
 - [email.js:211-405](file://src/utils/email.js#L211-L405)
+- [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 ## Detailed Component Analysis
 
@@ -701,15 +720,41 @@ The orders.html interface now provides comprehensive debugging capabilities with
 
 #### Security and Authentication Errors
 - **TOTP Validation Failures**: Detailed logging of failed authentication attempts
-- **Rate Limit Exceeded**: Clear indication when rate limiting is triggered
+- **Rate Limit Exceeded**: Clear indication when rate limit has been exceeded (3 attempts per 15 minutes)
 - **Secret Configuration Issues**: Error messages for missing or invalid TOTP secrets
 - **Access Denied**: Enhanced error messages for unauthorized operations
+
+### Structured Logging System
+**New** The system now includes a comprehensive Winston-based logging system for structured error tracking and security event monitoring:
+
+#### Winston Logger Configuration
+- **File Transport**: Rotating log files (error.log, combined.log) with 5MB size limit and 5 file retention
+- **Console Transport**: Colorized console output with timestamp formatting
+- **Structured Logging**: JSON-formatted log entries with metadata support
+- **Stack Trace Support**: Full stack trace capture for error logging
+- **Environment-aware**: File logging disabled in serverless environments (Vercel)
+
+#### Logging Categories
+- **Security Events**: TOTP verification attempts, authentication failures, rate limit triggers
+- **Database Operations**: Connection attempts, query results, fallback mechanisms
+- **API Requests**: Request/response logging with timing information
+- **Email Processing**: Brevo API interactions, delivery failures, template rendering
+- **System Health**: Startup sequences, configuration validation, service availability
+
+#### Log Format
+Each log entry includes:
+- Timestamp in readable format (YYYY-MM-DD HH:mm:ss)
+- Log level (ERROR, WARN, INFO, DEBUG)
+- Message content
+- Metadata (request details, database operations, security events)
+- Stack trace for error conditions
 
 **Section sources**
 - [orders.html:537-577](file://orders.html#L537-L577)
 - [orders.html:601-742](file://orders.html#L601-L742)
 - [orders.html:780-809](file://orders.html#L780-L809)
 - [orders.html:877-916](file://orders.html#L877-L916)
+- [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 ## Dependency Analysis
 External integrations:
@@ -723,6 +768,7 @@ External integrations:
 - **QRCode.js**: QR code generation for order tracking
 - **OTPAuth**: Two-factor authentication support
 - **Speakeasy**: TOTP token generation and verification
+- **Winston**: Structured logging framework for comprehensive error tracking
 
 ```mermaid
 graph LR
@@ -735,22 +781,26 @@ Server --> FS["File System<br/>orders-data.json"]
 Server --> ExpressValidator["Express Validator"]
 Server --> RateLimit["Rate Limiting"]
 Server --> Speakeasy["Speakeasy TOTP"]
+Server --> Winston["Winston Logger"]
 OrdersAdmin["orders.html"] --> QRCode["QRCode.js"]
 OrdersAdmin --> OTPAuth["OTPAuth"]
 OrdersAdmin --> ConsoleLogging["Console Logging"]
 EmailUtils["email.js"] --> Brevo
 AdminRoute["admin.js"] --> Speakeasy
+Logger["logger.js"] --> Winston
 ```
 
 **Diagram sources**
 - [server.js:105-148](file://server.js#L105-L148)
 - [email.js:1-17](file://src/utils/email.js#L1-L17)
 - [admin.js:1-128](file://src/routes/admin.js#L1-L128)
+- [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 **Section sources**
 - [server.js:105-148](file://server.js#L105-L148)
 - [email.js:1-17](file://src/utils/email.js#L1-L17)
 - [admin.js:1-128](file://src/routes/admin.js#L1-L128)
+- [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 ## Performance Considerations
 - **Rate limiting**: General API endpoints limited to 100 requests/minute; admin login limited to 5 attempts/15 minutes; order deletion limited to 3 attempts/15 minutes
@@ -764,6 +814,7 @@ AdminRoute["admin.js"] --> Speakeasy
 - **Debugging overhead**: Console logging provides detailed debugging but may impact performance in production environments
 - **Email processing**: Asynchronous email sending prevents blocking of order status updates
 - **Security overhead**: TOTP verification adds minimal computational overhead compared to security benefits
+- **Logging overhead**: Winston-based logging provides structured error tracking with minimal performance impact
 
 ## Troubleshooting Guide
 Common issues and resolutions:
@@ -813,6 +864,7 @@ Common issues and resolutions:
 - **Database connection timeout handling**: Prevents resource exhaustion
 - **Connection race condition prevention**: Enhanced protection against concurrent connection attempts
 - **Security logging**: Detailed audit trail of all administrative operations
+- **Structured logging**: Winston-based logging for comprehensive error tracking and security event monitoring
 
 **Enhanced Debugging Features**:
 - **Comprehensive Logging**: Every major operation logs detailed information to browser console
@@ -822,6 +874,7 @@ Common issues and resolutions:
 - **Real-time Notifications**: Visual feedback for all operations with auto-dismiss functionality
 - **Connection State Monitoring**: Detailed logging of database connection readiness and synchronization
 - **Security Event Logging**: Comprehensive audit trail of authentication and authorization events
+- **Structured Error Tracking**: Winston-based logging for systematic error analysis and debugging
 
 **Centralized Email Processing Benefits**:
 - **Consistency**: All email notifications processed through single point of control
@@ -843,12 +896,20 @@ Common issues and resolutions:
 - **Audit Trail**: Complete logging of all security-related events
 - **Isolation**: Separate TOTP secrets for different administrative functions
 
+**Structured Logging Benefits**:
+- **Comprehensive Error Tracking**: Systematic logging of all application events and errors
+- **Security Event Monitoring**: Detailed audit trail of authentication attempts and security incidents
+- **Performance Analysis**: Structured logging enables systematic performance monitoring and optimization
+- **Debugging Efficiency**: Structured logs enable faster identification and resolution of issues
+- **Production Monitoring**: Winston-based logging provides production-ready monitoring capabilities
+
 **Section sources**
 - [server.js:105-157](file://server.js#L105-L157)
 - [server.js:966-1040](file://server.js#L966-L1040)
 - [server.js:1553-1765](file://server.js#L1553-L1765)
 - [server.js:396-403](file://server.js#L396-L403)
 - [orders.html:537-577](file://orders.html#L537-L577)
+- [logger.js:1-67](file://src/utils/logger.js#L1-L67)
 
 ## Conclusion
 The Order & Payment Processing API provides a robust, dual-provider payment solution integrated with Gym Master and Paystack, supporting order lifecycle management, real-time tracking, and automated email notifications. The latest update significantly enhances database operations with connection waiting logic, improved error handling, and synchronization between database operations and connection state, while introducing critical security enhancements for administrative operations.
@@ -859,6 +920,8 @@ The hybrid database architecture supporting both MongoDB and PostgreSQL with aut
 
 The centralized email processing system with Brevo integration delivers professional, status-specific notifications with tracking links, enhancing customer experience and operational efficiency. The comprehensive debugging capabilities in the orders.html interface provide detailed console logging for order management operations, enabling developers to quickly identify and resolve issues through detailed error messages, stack traces, and structured diagnostic information.
 
-The frontend pages integrate seamlessly with backend endpoints to deliver a smooth customer experience from order placement to delivery confirmation. The enhanced error handling and debugging infrastructure, combined with the new security framework, makes the system more maintainable, secure, and easier to troubleshoot in production environments.
+The new Winston-based structured logging system provides comprehensive error tracking and security event monitoring, enabling systematic debugging and performance analysis in production environments. The enhanced logging infrastructure captures detailed information about authentication attempts, database operations, API requests, and system health, providing valuable insights for troubleshooting and optimization.
 
-**Updated** The consolidation of order status update functionality and centralization of email processing in server.js, combined with the enhanced database connection handling, synchronization mechanisms, and critical security enhancements for TOTP verification, represents a significant improvement in system architecture, providing better maintainability, reliability, security, and scalability for order management operations with enhanced connection state management, graceful fallback capabilities, and consistent authentication security across all administrative functions.
+The frontend pages integrate seamlessly with backend endpoints to deliver a smooth customer experience from order placement to delivery confirmation. The enhanced error handling and debugging infrastructure, combined with the new security framework and structured logging system, makes the system more maintainable, secure, and easier to troubleshoot in production environments.
+
+**Updated** The consolidation of order status update functionality and centralization of email processing in server.js, combined with the enhanced database connection handling, synchronization mechanisms, and critical security enhancements for TOTP verification, represents a significant improvement in system architecture, providing better maintainability, reliability, security, and scalability for order management operations with enhanced connection state management, graceful fallback capabilities, consistent authentication security across all administrative functions, and comprehensive structured logging for systematic debugging and monitoring.

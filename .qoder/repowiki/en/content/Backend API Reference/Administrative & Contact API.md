@@ -12,6 +12,13 @@
 - [orders-data.json](file://orders-data.json)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Enhanced order deletion process with improved TOTP authentication and better error handling
+- Added debug endpoint for TOTP configuration status visibility
+- Improved logging capabilities for debugging TOTP issues
+- Enhanced security measures for order deletion operations
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Project Structure](#project-structure)
@@ -48,15 +55,15 @@ Server --> ExtServices["External Services<br/>Gym Master, Paystack, Brevo"]
 ```
 
 **Diagram sources**
-- [server.js](file://server.js#L462-L469)
-- [src/routes/admin.js](file://src/routes/admin.js#L1-L81)
-- [src/routes/orders.js](file://src/routes/orders.js#L1-L350)
-- [src/routes/contact.js](file://src/routes/contact.js#L1-L71)
-- [src/utils/logger.js](file://src/utils/logger.js#L1-L51)
+- [server.js:462-469](file://server.js#L462-L469)
+- [src/routes/admin.js:1-81](file://src/routes/admin.js#L1-L81)
+- [src/routes/orders.js:1-350](file://src/routes/orders.js#L1-L350)
+- [src/routes/contact.js:1-71](file://src/routes/contact.js#L1-L71)
+- [src/utils/logger.js:1-51](file://src/utils/logger.js#L1-L51)
 
 **Section sources**
-- [server.js](file://server.js#L462-L469)
-- [package.json](file://package.json#L15-L26)
+- [server.js:462-469](file://server.js#L462-L469)
+- [package.json:15-26](file://package.json#L15-L26)
 
 ## Core Components
 - Express server with CORS, rate limiting, request logging, and health checks
@@ -66,10 +73,10 @@ Server --> ExtServices["External Services<br/>Gym Master, Paystack, Brevo"]
 - Validation middleware for request sanitization and error handling
 
 **Section sources**
-- [server.js](file://server.js#L380-L452)
-- [src/utils/logger.js](file://src/utils/logger.js#L10-L39)
-- [src/routes/admin.js](file://src/routes/admin.js#L7-L8)
-- [src/routes/orders.js](file://src/routes/orders.js#L5-L6)
+- [server.js:380-452](file://server.js#L380-L452)
+- [src/utils/logger.js:10-39](file://src/utils/logger.js#L10-L39)
+- [src/routes/admin.js:7-8](file://src/routes/admin.js#L7-L8)
+- [src/routes/orders.js:5-6](file://src/routes/orders.js#L5-L6)
 
 ## Architecture Overview
 The server exposes REST endpoints grouped by functional areas:
@@ -104,12 +111,12 @@ Orders-->>Client : {success : true,orderId,paymentUrl}
 ```
 
 **Diagram sources**
-- [server.js](file://server.js#L457-L460)
-- [src/routes/admin.js](file://src/routes/admin.js#L10-L24)
-- [src/routes/orders.js](file://src/routes/orders.js#L137-L169)
-- [src/routes/orders.js](file://src/routes/orders.js#L171-L211)
-- [src/routes/contact.js](file://src/routes/contact.js#L5-L68)
-- [server.js](file://server.js#L1767-L2014)
+- [server.js:457-460](file://server.js#L457-L460)
+- [src/routes/admin.js:10-24](file://src/routes/admin.js#L10-L24)
+- [src/routes/orders.js:137-169](file://src/routes/orders.js#L137-L169)
+- [src/routes/orders.js:171-211](file://src/routes/orders.js#L171-L211)
+- [src/routes/contact.js:5-68](file://src/routes/contact.js#L5-L68)
+- [server.js:1767-2014](file://server.js#L1767-L2014)
 
 ## Detailed Component Analysis
 
@@ -148,13 +155,15 @@ Practical Example
   4. Use TOTP when performing sensitive actions like order deletion.
 
 **Section sources**
-- [src/routes/admin.js](file://src/routes/admin.js#L10-L24)
-- [src/routes/admin.js](file://src/routes/admin.js#L26-L78)
-- [server.js](file://server.js#L1118-L1136)
-- [server.js](file://server.js#L1138-L1216)
+- [src/routes/admin.js:10-24](file://src/routes/admin.js#L10-L24)
+- [src/routes/admin.js:26-78](file://src/routes/admin.js#L26-L78)
+- [server.js:1118-1136](file://server.js#L1118-L1136)
+- [server.js:1138-1216](file://server.js#L1138-L1216)
 
 ### Order Management Endpoints
 - Purpose: Manage orders, track status, update delivery status, delete orders (with TOTP), create orders via Gym Master, and verify payments.
+
+**Updated** Enhanced order deletion process with improved TOTP authentication, better error handling, and debug logging capabilities.
 
 Endpoints
 - GET /api/orders
@@ -200,9 +209,10 @@ Endpoints
   - Responses:
     - 200 OK: { success: true, message: "Order deleted successfully", orderId }
     - 400 Bad Request: { success: false, error: "Invalid code format" }
-    - 401 Unauthorized: { success: false, error: "TOTP code required" }
-    - 403 Forbidden: { success: false, error: "Invalid authentication code" }
+    - 401 Unauthorized: { success: false, error: "TOTP code required. Please provide your Google Authenticator code." }
+    - 403 Forbidden: { success: false, error: "Invalid authentication code. Please try again." }
     - 404 Not Found: { success: false, error: "Order not found" }
+    - 400 Bad Request: { success: false, error: "Cannot delete paid orders that are being processed" }
   - Notes: Rate-limited to prevent abuse.
 
 - POST /api/orders
@@ -241,10 +251,27 @@ Endpoints
     - 200 OK: { success: true, verified: boolean } or { success: false, verified: false }
     - 500 Internal Server Error: { success: false, error: "Payment verification not configured" }
 
+**Updated** Debug Endpoint for TOTP Configuration Status
+- GET /api/orders/debug
+  - Description: Debug endpoint to check TOTP configuration status and system state.
+  - Authentication: None.
+  - Responses:
+    - 200 OK: { 
+        USE_DB: boolean,
+        DATABASE_ENABLED: string,
+        MONGODB_URI: string,
+        dbConnected: boolean,
+        TOTP_SECRET_ADMIN_set: boolean,
+        TOTP_SECRET_set: boolean,
+        timestamp: string
+      }
+  - Notes: Provides visibility into TOTP configuration status and database connectivity.
+
 Security and Access Controls
 - Order deletion requires TOTP verification via header.
 - Status updates are open but can trigger automated emails.
 - Payment verification requires Paystack secret key.
+- Enhanced error handling with specific error messages for different failure scenarios.
 
 Practical Example: Order Management Workflow
 - Create order:
@@ -257,17 +284,20 @@ Practical Example: Order Management Workflow
 - Delete order:
   1. Admin calls DELETE /api/orders/:orderId with x-totp-code header.
   2. Server validates TOTP and deletes order if eligible.
+  3. Enhanced logging provides debug information for troubleshooting.
 
 **Section sources**
-- [src/routes/orders.js](file://src/routes/orders.js#L38-L90)
-- [src/routes/orders.js](file://src/routes/orders.js#L92-L135)
-- [src/routes/orders.js](file://src/routes/orders.js#L137-L169)
-- [src/routes/orders.js](file://src/routes/orders.js#L171-L211)
-- [src/routes/orders.js](file://src/routes/orders.js#L213-L304)
-- [src/routes/orders.js](file://src/routes/orders.js#L306-L347)
-- [server.js](file://server.js#L1218-L1285)
-- [server.js](file://server.js#L1767-L2014)
-- [server.js](file://server.js#L878-L980)
+- [src/routes/orders.js:38-90](file://src/routes/orders.js#L38-L90)
+- [src/routes/orders.js:92-135](file://src/routes/orders.js#L92-L135)
+- [src/routes/orders.js:137-169](file://src/routes/orders.js#L137-L169)
+- [src/routes/orders.js:171-211](file://src/routes/orders.js#L171-L211)
+- [src/routes/orders.js:213-304](file://src/routes/orders.js#L213-L304)
+- [src/routes/orders.js:306-347](file://src/routes/orders.js#L306-L347)
+- [src/routes/orders.js:24-35](file://src/routes/orders.js#L24-L35)
+- [server.js:1218-1285](file://server.js#L1218-L1285)
+- [server.js:1767-2014](file://server.js#L1767-L2014)
+- [server.js:878-980](file://server.js#L878-L980)
+- [server.js:1307-1374](file://server.js#L1307-L1374)
 
 ### Contact Form Processing Endpoints
 - Purpose: Receive contact form submissions and notify support via email or file fallback.
@@ -297,8 +327,8 @@ Practical Example: Contact Form Processing
 - If email service is unavailable, message is saved to contact-messages.json.
 
 **Section sources**
-- [src/routes/contact.js](file://src/routes/contact.js#L5-L68)
-- [server.js](file://server.js#L2052-L2264)
+- [src/routes/contact.js:5-68](file://src/routes/contact.js#L5-L68)
+- [server.js:2052-2264](file://server.js#L2052-L2264)
 
 ### Authentication and User Administration
 - Gym Master Login Endpoint
@@ -324,10 +354,10 @@ Notes
 - Token handling and JWT decoding are supported.
 
 **Section sources**
-- [server.js](file://server.js#L682-L779)
-- [server.js](file://server.js#L501-L600)
-- [server.js](file://server.js#L602-L680)
-- [server.js](file://server.js#L1061-L1116)
+- [server.js:682-779](file://server.js#L682-L779)
+- [server.js:501-600](file://server.js#L501-L600)
+- [server.js:602-680](file://server.js#L602-L680)
+- [server.js:1061-1116](file://server.js#L1061-L1116)
 
 ### System Monitoring and Logging
 - Health Check
@@ -338,9 +368,9 @@ Notes
   - Structured logs with file transport and console transport in development.
 
 **Section sources**
-- [server.js](file://server.js#L457-L460)
-- [server.js](file://server.js#L430-L452)
-- [src/utils/logger.js](file://src/utils/logger.js#L10-L39)
+- [server.js:457-460](file://server.js#L457-L460)
+- [server.js:430-452](file://server.js#L430-L452)
+- [src/utils/logger.js:10-39](file://src/utils/logger.js#L10-L39)
 
 ## Dependency Analysis
 External libraries and integrations:
@@ -366,12 +396,12 @@ Server --> Dotenv["dotenv"]
 ```
 
 **Diagram sources**
-- [package.json](file://package.json#L15-L26)
-- [server.js](file://server.js#L1-L15)
+- [package.json:15-26](file://package.json#L15-L26)
+- [server.js:1-15](file://server.js#L1-L15)
 
 **Section sources**
-- [package.json](file://package.json#L15-L26)
-- [server.js](file://server.js#L1-L15)
+- [package.json:15-26](file://package.json#L15-L26)
+- [server.js:1-15](file://server.js#L1-L15)
 
 ## Performance Considerations
 - Rate Limiting:
@@ -384,8 +414,6 @@ Server --> Dotenv["dotenv"]
   - External service calls (Gym Master, Paystack, Brevo) are awaited; consider timeouts and retries for resilience.
 - File vs Database:
   - Orders can be stored in-memory or persisted to file; database mode is preferred for production.
-
-[No sources needed since this section provides general guidance]
 
 ## Troubleshooting Guide
 Common Issues and Resolutions
@@ -401,6 +429,10 @@ Common Issues and Resolutions
   - Symptom: 401/403 errors on order deletion.
   - Causes: Missing or invalid x-totp-code header; incorrect TOTP code.
   - Resolution: Verify Google Authenticator setup and code freshness.
+- Enhanced Debugging with /api/orders/debug
+  - Use the debug endpoint to check TOTP configuration status and system state.
+  - Verify TOTP_SECRET_ADMIN and TOTP_SECRET environment variables are set.
+  - Check database connectivity status for MongoDB.
 - Email Service Not Configured
   - Symptom: Contact form saved to file instead of emailed.
   - Cause: BREVO_API_KEY missing.
@@ -413,16 +445,17 @@ Common Issues and Resolutions
 Audit Logging
 - All requests are logged with method, path, status, duration, and IP.
 - Errors are logged with stack traces for debugging.
+- Enhanced logging for TOTP verification attempts and order deletion operations.
 
 **Section sources**
-- [server.js](file://server.js#L383-L393)
-- [server.js](file://server.js#L430-L452)
-- [src/utils/logger.js](file://src/utils/logger.js#L10-L39)
+- [server.js:383-393](file://server.js#L383-L393)
+- [server.js:430-452](file://server.js#L430-L452)
+- [src/utils/logger.js:10-39](file://src/utils/logger.js#L10-L39)
 
 ## Conclusion
 This API provides a robust foundation for administrative order management, secure two-factor authentication, and customer communication via contact forms. By leveraging rate limiting, input validation, and structured logging, the system maintains reliability and security. Integrations with Gym Master, Paystack, and Brevo enable end-to-end commerce workflows with email notifications and payment verification.
 
-[No sources needed since this section summarizes without analyzing specific files]
+**Updated** Recent enhancements include improved TOTP authentication for order deletion, better error handling with specific error messages, and debug logging capabilities for troubleshooting TOTP configuration issues.
 
 ## Appendices
 
@@ -437,6 +470,7 @@ This API provides a robust foundation for administrative order management, secur
   - DELETE /api/orders/:orderId
   - POST /api/orders
   - GET /api/orders/verify/:reference
+  - GET /api/orders/debug
 - Contact
   - POST /api/contact
 - Member/Auth
@@ -446,13 +480,13 @@ This API provides a robust foundation for administrative order management, secur
   - GET /api/test-email
 
 **Section sources**
-- [src/routes/admin.js](file://src/routes/admin.js#L10-L78)
-- [src/routes/orders.js](file://src/routes/orders.js#L38-L347)
-- [src/routes/contact.js](file://src/routes/contact.js#L5-L68)
-- [server.js](file://server.js#L682-L779)
-- [server.js](file://server.js#L501-L600)
-- [server.js](file://server.js#L602-L680)
-- [server.js](file://server.js#L1061-L1116)
+- [src/routes/admin.js:10-78](file://src/routes/admin.js#L10-L78)
+- [src/routes/orders.js:38-347](file://src/routes/orders.js#L38-L347)
+- [src/routes/contact.js:5-68](file://src/routes/contact.js#L5-L68)
+- [server.js:682-779](file://server.js#L682-L779)
+- [server.js:501-600](file://server.js#L501-L600)
+- [server.js:602-680](file://server.js#L602-L680)
+- [server.js:1061-1116](file://server.js#L1061-L1116)
 
 ### Data Models
 Representative order model used across endpoints:
@@ -483,5 +517,5 @@ Representative order model used across endpoints:
 - statusUpdatedAt: datetime (optional)
 
 **Section sources**
-- [orders-data.json](file://orders-data.json#L1-L66)
-- [src/routes/orders.js](file://src/routes/orders.js#L235-L252)
+- [orders-data.json:1-66](file://orders-data.json#L1-L66)
+- [src/routes/orders.js:235-252](file://src/routes/orders.js#L235-L252)

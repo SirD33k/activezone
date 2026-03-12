@@ -17,11 +17,11 @@
 
 ## Update Summary
 **Changes Made**
-- Updated to reflect new modular routing system with dedicated route handlers
-- Enhanced security measures including rate limiting, input validation, and TOTP authentication
-- Added comprehensive documentation for all route modules
-- Updated architecture diagrams to show modular structure
-- Added detailed examples for all endpoints
+- Enhanced order deletion endpoint documentation with improved TOTP verification process
+- Added comprehensive debug endpoint information for order management
+- Updated security considerations for TOTP authentication with dual-secret support
+- Improved error response formats and validation rules
+- Added rate limiting details for order deletion operations
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -92,17 +92,17 @@ PM --> FS
 ```
 
 **Diagram sources**
-- [server.js](file://server.js#L17-L25)
-- [auth.js](file://src/routes/auth.js#L1-L54)
-- [member.js](file://src/routes/member.js#L1-L142)
-- [products.js](file://src/routes/products.js#L1-L121)
-- [orders.js](file://src/routes/orders.js#L1-L371)
-- [payment.js](file://src/routes/payment.js#L1-L154)
-- [contact.js](file://src/routes/contact.js#L1-L71)
+- [server.js:17-25](file://server.js#L17-L25)
+- [auth.js:1-54](file://src/routes/auth.js#L1-L54)
+- [member.js:1-142](file://src/routes/member.js#L1-L142)
+- [products.js:1-121](file://src/routes/products.js#L1-L121)
+- [orders.js:1-371](file://src/routes/orders.js#L1-L371)
+- [payment.js:1-154](file://src/routes/payment.js#L1-L154)
+- [contact.js:1-71](file://src/routes/contact.js#L1-L71)
 
 **Section sources**
-- [server.js](file://server.js#L17-L25)
-- [package.json](file://package.json#L1-L32)
+- [server.js:17-25](file://server.js#L17-L25)
+- [package.json:1-32](file://package.json#L1-L32)
 
 ## Core Components
 
@@ -117,7 +117,7 @@ Security measures include:
 - JSON parsing verification
 - CORS configuration
 - HTTPS enforcement in production
-- TOTP-based authentication for admin operations
+- TOTP-based authentication for admin operations with dual-secret support
 
 ### Database Abstraction
 The system supports dual storage modes:
@@ -126,9 +126,9 @@ The system supports dual storage modes:
 - Hybrid approach with MySQL helpers for order management
 
 **Section sources**
-- [server.js](file://server.js#L407-L436)
-- [db.js](file://database/db.js#L1-L267)
-- [init.sql](file://database/init.sql#L1-L80)
+- [server.js:407-436](file://server.js#L407-L436)
+- [db.js:1-267](file://database/db.js#L1-L267)
+- [init.sql:1-80](file://database/init.sql#L1-L80)
 
 ## Architecture Overview
 
@@ -167,12 +167,12 @@ Pay-->>Client : Payment redirect
 ```
 
 **Diagram sources**
-- [server.js](file://server.js#L1793-L2040)
-- [auth.js](file://src/routes/auth.js#L11-L51)
-- [member.js](file://src/routes/member.js#L11-L41)
-- [products.js](file://src/routes/products.js#L37-L69)
-- [orders.js](file://src/routes/orders.js#L234-L325)
-- [payment.js](file://src/routes/payment.js#L31-L110)
+- [server.js:1793-2040](file://server.js#L1793-L2040)
+- [auth.js:11-51](file://src/routes/auth.js#L11-L51)
+- [member.js:11-41](file://src/routes/member.js#L11-L41)
+- [products.js:37-69](file://src/routes/products.js#L37-L69)
+- [orders.js:234-325](file://src/routes/orders.js#L234-L325)
+- [payment.js:31-110](file://src/routes/payment.js#L31-L110)
 
 ## Detailed Component Analysis
 
@@ -182,7 +182,7 @@ Pay-->>Client : Payment redirect
 **Response:** `{ status: 'ok', message: 'Server is running' }`
 
 **Section sources**
-- [server.js](file://server.js#L464-L467)
+- [server.js:464-467](file://server.js#L464-L467)
 
 ### Authentication Endpoints
 
@@ -214,8 +214,8 @@ Pay-->>Client : Payment redirect
 - Password: Non-empty string
 
 **Section sources**
-- [server.js](file://server.js#L689-L786)
-- [auth.js](file://src/routes/auth.js#L11-L51)
+- [server.js:689-786](file://server.js#L689-L786)
+- [auth.js:11-51](file://src/routes/auth.js#L11-L51)
 
 ### Gym Master Integration Endpoints
 
@@ -237,8 +237,8 @@ Pay-->>Client : Payment redirect
 ```
 
 **Section sources**
-- [server.js](file://server.js#L478-L506)
-- [member.js](file://src/routes/member.js#L11-L41)
+- [server.js:478-506](file://server.js#L478-L506)
+- [member.js:11-41](file://src/routes/member.js#L11-L41)
 
 #### Member Registration
 **Endpoint:** `POST /api/member/create`
@@ -265,8 +265,8 @@ Pay-->>Client : Payment redirect
 ```
 
 **Section sources**
-- [server.js](file://server.js#L508-L607)
-- [member.js](file://src/routes/member.js#L43-L97)
+- [server.js:508-607](file://server.js#L508-L607)
+- [member.js:43-97](file://src/routes/member.js#L43-L97)
 
 #### Profile Updates
 **Endpoint:** `POST /api/member/profile/update`
@@ -290,8 +290,8 @@ Pay-->>Client : Payment redirect
 ```
 
 **Section sources**
-- [server.js](file://server.js#L609-L687)
-- [member.js](file://src/routes/member.js#L99-L139)
+- [server.js:609-687](file://server.js#L609-L687)
+- [member.js:99-139](file://src/routes/member.js#L99-L139)
 
 ### Product Catalog Endpoints
 
@@ -312,8 +312,8 @@ Pay-->>Client : Payment redirect
 - Falls back to Gym Master API if local cache empty
 
 **Section sources**
-- [server.js](file://server.js#L37-L69)
-- [products.js](file://src/routes/products.js#L37-L69)
+- [server.js:37-69](file://server.js#L37-L69)
+- [products.js:37-69](file://src/routes/products.js#L37-L69)
 
 #### Stock Validation
 **Endpoint:** `POST /api/products/check-stock`
@@ -336,8 +336,8 @@ Pay-->>Client : Payment redirect
 ```
 
 **Section sources**
-- [server.js](file://server.js#L71-L118)
-- [products.js](file://src/routes/products.js#L71-L118)
+- [server.js:71-118](file://server.js#L71-L118)
+- [products.js:71-118](file://src/routes/products.js#L71-L118)
 
 ### Order Processing Endpoints
 
@@ -380,8 +380,8 @@ Pay-->>Client : Payment redirect
 5. Returns payment URL
 
 **Section sources**
-- [server.js](file://server.js#L1793-L2040)
-- [orders.js](file://src/routes/orders.js#L234-L325)
+- [server.js:1793-2040](file://server.js#L1793-L2040)
+- [orders.js:234-325](file://src/routes/orders.js#L234-L325)
 
 #### Order Tracking
 **Endpoint:** `GET /api/orders/track/:reference`
@@ -399,7 +399,7 @@ Pay-->>Client : Payment redirect
 ```
 
 **Section sources**
-- [orders.js](file://src/routes/orders.js#L102-L145)
+- [orders.js:102-145](file://src/routes/orders.js#L102-L145)
 
 #### Order Status Management
 **Endpoint:** `PATCH /api/orders/:orderId/status`
@@ -426,17 +426,23 @@ Pay-->>Client : Payment redirect
 ```
 
 **Section sources**
-- [server.js](file://server.js#L992-L1066)
-- [orders.js](file://src/routes/orders.js#L147-L190)
+- [server.js:992-1066](file://server.js#L992-L1066)
+- [orders.js:147-190](file://src/routes/orders.js#L147-L190)
 
 #### Order Deletion
 **Endpoint:** `DELETE /api/orders/:orderId`
-**Purpose:** Delete orders (Admin only)
+**Purpose:** Delete orders (Admin only) with enhanced TOTP verification
 **Authentication:** Admin credentials + TOTP required
 **Path Parameters:**
 - `orderId`: Required - Order identifier
 **Headers:**
 - `x-totp-code`: Required - 6-digit Google Authenticator code
+
+**Enhanced Security Features:**
+- Dual-secret TOTP verification with fallback support
+- Rate limiting (3 attempts per 15 minutes)
+- Restricts deletion of paid orders that are being processed
+- Enhanced error responses with specific failure reasons
 
 **Response:**
 ```javascript
@@ -449,12 +455,20 @@ Pay-->>Client : Payment redirect
 
 **Security Controls:**
 - TOTP verification with base32 secret
-- Rate limiting (3 attempts per 15 minutes)
-- Restricts deletion of paid orders
+- Rate limiting configuration: 3 attempts per 15 minutes
+- Restricts deletion of paid orders that are being processed
+- Enhanced logging for security events
+
+**Debug Information:**
+- Accessible via `/api/orders/debug` endpoint
+- Provides database connection status
+- Shows TOTP secret configuration status
+- Displays timestamp for debugging purposes
 
 **Section sources**
-- [server.js](file://server.js#L1244-L1311)
-- [admin.js](file://src/routes/admin.js#L10-L26)
+- [server.js:1307-1374](file://server.js#L1307-L1374)
+- [orders.js:24-35](file://src/routes/orders.js#L24-L35)
+- [admin.js:10-26](file://src/routes/admin.js#L10-L26)
 
 ### Payment Processing Endpoints
 
@@ -488,7 +502,7 @@ Pay-->>Client : Payment redirect
 ```
 
 **Section sources**
-- [payment.js](file://src/routes/payment.js#L31-L110)
+- [payment.js:31-110](file://src/routes/payment.js#L31-L110)
 
 #### Payment Verification
 **Endpoint:** `GET /api/verify-payment/:reference`
@@ -507,8 +521,8 @@ Pay-->>Client : Payment redirect
 ```
 
 **Section sources**
-- [server.js](file://server.js#L885-L987)
-- [payment.js](file://src/routes/payment.js#L112-L151)
+- [server.js:885-987](file://server.js#L885-L987)
+- [payment.js:112-151](file://src/routes/payment.js#L112-L151)
 
 ### Administrative Endpoints
 
@@ -536,8 +550,8 @@ Pay-->>Client : Payment redirect
 - Configurable via environment variable
 
 **Section sources**
-- [server.js](file://server.js#L1125-L1142)
-- [admin.js](file://src/routes/admin.js#L10-L26)
+- [server.js:1125-1142](file://server.js#L1125-L1142)
+- [admin.js:10-26](file://src/routes/admin.js#L10-L26)
 
 #### TOTP Setup
 **Endpoint:** `GET /api/totp/setup`
@@ -545,14 +559,49 @@ Pay-->>Client : Payment redirect
 **Authentication:** None required
 **Response:** HTML page with QR codes and secrets
 
-**Features:**
+**Enhanced Features:**
 - Separate TOTP codes for admin login and order deletion
 - Manual secret entry option
 - Instructions for Google Authenticator setup
+- Dual-secret support with fallback mechanisms
+
+**Security Considerations:**
+- Two-factor authentication for critical operations
+- Separate secrets for different admin functions
+- Time-based verification with window tolerance
+- Enhanced logging for security events
 
 **Section sources**
-- [server.js](file://server.js#L1144-L1242)
-- [admin.js](file://src/routes/admin.js#L28-L125)
+- [server.js:1144-1242](file://server.js#L1144-L1242)
+- [admin.js:28-125](file://src/routes/admin.js#L28-L125)
+
+### Debug Endpoints
+
+#### Order Management Debug
+**Endpoint:** `GET /api/orders/debug`
+**Purpose:** Debug order management system status
+**Authentication:** None required
+**Response:**
+```javascript
+{
+  USE_DB: boolean,
+  DATABASE_ENABLED: string,
+  MONGODB_URI: string,
+  dbConnected: boolean,
+  TOTP_SECRET_ADMIN_set: boolean,
+  TOTP_SECRET_set: boolean,
+  timestamp: string
+}
+```
+
+**Debug Information:**
+- Database connection status
+- Environment variable configuration
+- TOTP secret availability
+- System timestamp for debugging
+
+**Section sources**
+- [orders.js:24-35](file://src/routes/orders.js#L24-L35)
 
 ### Contact Form Endpoint
 
@@ -585,8 +634,8 @@ Pay-->>Client : Payment redirect
 - Comprehensive logging
 
 **Section sources**
-- [server.js](file://server.js#L2078-L2290)
-- [contact.js](file://src/routes/contact.js#L1-L71)
+- [server.js:2078-2290](file://server.js#L2078-L2290)
+- [contact.js:1-71](file://src/routes/contact.js#L1-L71)
 
 ## Dependency Analysis
 
@@ -641,11 +690,11 @@ SV --> AD
 ```
 
 **Diagram sources**
-- [package.json](file://package.json#L19-L30)
-- [server.js](file://server.js#L1-L16)
+- [package.json:19-30](file://package.json#L19-L30)
+- [server.js:1-16](file://server.js#L1-L16)
 
 **Section sources**
-- [package.json](file://package.json#L19-L30)
+- [package.json:19-30](file://package.json#L19-L30)
 
 ## Performance Considerations
 
@@ -701,9 +750,18 @@ SV --> AD
 2. Verify sender email configuration
 3. Check email template formatting
 
+#### TOTP Authentication Issues
+**Problem:** Order deletion TOTP verification failures
+**Solution:** Verify Google Authenticator setup and secret configuration
+**Debug Steps:**
+1. Check TOTP_SECRET_ADMIN and TOTP_SECRET environment variables
+2. Verify Google Authenticator app synchronization
+3. Confirm rate limiting hasn't been triggered
+4. Use `/api/orders/debug` endpoint for status information
+
 **Section sources**
-- [server.js](file://server.js#L2050-L2071)
-- [db.js](file://database/db.js#L1-L50)
+- [server.js:2050-2071](file://server.js#L2050-L2071)
+- [db.js:1-50](file://database/db.js#L1-L50)
 
 ## Conclusion
-Active Zone Hub's backend provides a comprehensive API solution with robust integrations to Gym Master and Paystack, along with strong security measures including rate limiting, input validation, and TOTP-based authentication. The modular architecture supports both database-driven and file-based storage, ensuring flexibility across deployment environments. The extensive error handling and logging capabilities facilitate reliable operation and easy troubleshooting.
+Active Zone Hub's backend provides a comprehensive API solution with robust integrations to Gym Master and Paystack, along with strong security measures including rate limiting, input validation, and TOTP-based authentication. The modular architecture supports both database-driven and file-based storage, ensuring flexibility across deployment environments. The enhanced order deletion endpoint with improved TOTP verification process provides better security and debugging capabilities. The extensive error handling and logging capabilities facilitate reliable operation and easy troubleshooting.
