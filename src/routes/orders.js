@@ -3,8 +3,12 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const { body, param, validationResult } = require('express-validator');
+const speakeasy = require('speakeasy');
 
 const ORDERS_FILE = path.join(__dirname, '../../../orders-data.json');
+
+// Fixed TOTP secret for order deletion - DO NOT CHANGE
+const TOTP_SECRET_DELETE = process.env.TOTP_SECRET_DELETE || 'HBTTGRBVGA3TMKL5MV5DS6KVEVPHE62SJBUXG232EEZXO33NOJ4Q';
 
 // Check if MongoDB is available
 const USE_DB = process.env.DATABASE_ENABLED === 'true' && process.env.MONGODB_URI;
@@ -26,6 +30,7 @@ router.get('/debug', (req, res) => {
         DATABASE_ENABLED: process.env.DATABASE_ENABLED,
         MONGODB_URI: process.env.MONGODB_URI ? 'set (hidden)' : 'not set',
         dbConnected: !!db,
+        TOTP_SECRET_DELETE_set: !!process.env.TOTP_SECRET_DELETE,
         timestamp: new Date().toISOString()
     });
 });
@@ -312,21 +317,30 @@ router.get('/track/:reference', [
 // NOTE: PATCH /:orderId/status is handled in server.js to avoid duplicate route handlers
 // The server.js implementation includes full email functionality with Brevo integration
 
-// Delete order - using admin password instead of TOTP for simplicity
+// Delete order with TOTP verification
 router.delete('/:orderId', async (req, res) => {
     const { orderId } = req.params;
-    const adminPassword = req.headers['x-admin-password'];
+    const totpCode = req.headers['x-totp-code'];
 
-    // Use admin password for deletion (same as login)
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ActiveZone@2026';
-    
-    if (!adminPassword) {
-        return res.status(401).json({ success: false, error: 'Admin password required' });
+    if (!totpCode) {
+        return res.status(401).json({ success: false, error: 'TOTP code required' });
     }
 
-    if (adminPassword !== ADMIN_PASSWORD) {
-        console.log(`Invalid password attempted for order deletion: ${orderId}`);
-        return res.status(403).json({ success: false, error: 'Invalid password' });
+    if (!/^\d{6}$/.test(totpCode)) {
+        return res.status(400).json({ success: false, error: 'Invalid code format - must be 6 digits' });
+    }
+
+    // Verify TOTP code
+    const isValid = speakeasy.totp.verify({
+        secret: TOTP_SECRET_DELETE,
+        encoding: 'base32',
+        token: totpCode,
+        window: 2  // Allow 2 steps before/after for time drift
+    });
+
+    if (!isValid) {
+        console.log(`Invalid TOTP code attempted for order deletion: ${orderId}`);
+        return res.status(403).json({ success: false, error: 'Invalid authentication code' });
     }
 
     try {
@@ -336,7 +350,7 @@ router.delete('/:orderId', async (req, res) => {
             return res.status(404).json({ success: false, error: 'Order not found' });
         }
 
-        console.log(`Order ${orderId} deleted by admin`);
+        console.log(`Order ${orderId} deleted by admin (TOTP verified)`);
 
         res.json({ success: true, message: 'Order deleted successfully' });
     } catch (error) {
@@ -393,3 +407,4 @@ router.get('/verify/:reference', async (req, res) => {
 
 module.exports = router;
 module.exports.setDatabase = setDatabase;
+module.exports.TOTP_SECRET_DELETE = TOTP_SECRET_DELETE;

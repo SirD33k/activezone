@@ -20,6 +20,7 @@ const authRoutes = require('./src/routes/auth');
 const productsRoutes = require('./src/routes/products');
 const paymentRoutes = require('./src/routes/payment');
 const ordersRoutes = require('./src/routes/orders');
+const TOTP_SECRET_DELETE = ordersRoutes.TOTP_SECRET_DELETE;
 const contactRoutes = require('./src/routes/contact');
 const adminRoutes = require('./src/routes/admin');
 
@@ -1215,7 +1216,7 @@ app.get('/api/totp/setup', async (req, res) => {
         });
         
         const otpauthUrlDelete = speakeasy.otpauthURL({
-            secret: TOTP_SECRET,
+            secret: TOTP_SECRET_DELETE,
             label: 'Active Zone Hub - Order Delete',
             issuer: 'Active Zone Hub',
             encoding: 'base32'
@@ -1279,8 +1280,8 @@ app.get('/api/totp/setup', async (req, res) => {
                         <img src="${qrCodeDelete}" alt="QR Code for Delete" />
                     </div>
                     <p><strong>Or enter manually in the app:</strong></p>
-                    <div class="secret">${TOTP_SECRET}</div>
-                    <button class="copy-btn" onclick="navigator.clipboard.writeText('${TOTP_SECRET}').then(() => alert('Secret copied!'))">📋 Copy Secret</button>
+                    <div class="secret">${TOTP_SECRET_DELETE}</div>
+                    <button class="copy-btn" onclick="navigator.clipboard.writeText('${TOTP_SECRET_DELETE}').then(() => alert('Secret copied!'))">📋 Copy Secret</button>
                 </div>
                 
                 <div class="instructions">
