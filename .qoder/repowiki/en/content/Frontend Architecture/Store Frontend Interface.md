@@ -9,6 +9,7 @@
 - [style.css](file://src/style.css)
 - [products.js](file://src/routes/products.js)
 - [server.js](file://server.js)
+- [services.html](file://services.html)
 </cite>
 
 ## Update Summary
@@ -18,6 +19,8 @@
 - Implemented graceful degradation with offline product data usage
 - Improved product loading mechanisms with better conditional content replacement
 - Enhanced cart integration with robust fallback behavior
+- **Updated** Enhanced services page content with improved menu descriptions and cultural adaptations
+- **Updated** Implemented comprehensive mobile-responsive layout improvements with touch optimizations
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -33,7 +36,7 @@
 ## Introduction
 This document provides comprehensive technical documentation for the store frontend interface implementation in store.js. It covers product display systems, category filtering, price formatting, search functionality, dynamic content rendering, product card generation, user interaction handling, filtering mechanisms, responsive grid layouts, sorting options, pagination strategies, performance optimization, lazy loading, memory management, and cart system integration.
 
-**Updated** The implementation now features enhanced API integration with improved error handling, better user experience during API failures, and more robust product loading mechanisms. The store frontend provides enhanced fallback behavior and improved retry mechanisms for a more resilient user experience.
+**Updated** The implementation now features enhanced API integration with improved error handling, better user experience during API failures, and more robust product loading mechanisms. The store frontend provides enhanced fallback behavior and improved retry mechanisms for a more resilient user experience. Additionally, the services page has been enhanced with improved menu descriptions and cultural adaptations, along with comprehensive mobile-responsive layout improvements including touch optimizations for better user experience across all devices.
 
 ## Project Structure
 The store frontend is composed of three primary layers:
@@ -45,7 +48,8 @@ The store frontend is composed of three primary layers:
 graph TB
 subgraph "Presentation Layer"
 HTML["store.html<br/>Static product cards"]
-CSS["style.css<br/>Responsive grid & animations"]
+CSS["style.css<br/>Responsive grid & animations<br/>Mobile optimizations"]
+SERVICES["services.html<br/>Enhanced content & cultural adaptations"]
 end
 subgraph "Business Logic Layer"
 STOREJS["store.js<br/>Enhanced API integration<br/>Error handling & fallback<br/>Event delegation patterns"]
@@ -66,17 +70,19 @@ CARTJS --> CARTMANAGER
 ```
 
 **Diagram sources**
-- [store.js](file://src/store.js#L1-L333)
-- [store.html](file://store.html#L1-L769)
-- [cart.js](file://src/cart.js#L1-L156)
-- [cartManager.js](file://src/cartManager.js#L1-L91)
-- [products.js](file://src/routes/products.js#L1-L133)
-- [server.js](file://server.js#L1-L200)
+- [store.js:1-333](file://src/store.js#L1-L333)
+- [store.html:1-769](file://store.html#L1-L769)
+- [services.html:1-389](file://services.html#L1-L389)
+- [cart.js:1-156](file://src/cart.js#L1-L156)
+- [cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [products.js:1-133](file://src/routes/products.js#L1-L133)
+- [server.js:1-200](file://server.js#L1-L200)
 
 **Section sources**
-- [store.js](file://src/store.js#L1-L333)
-- [store.html](file://store.html#L1-L769)
-- [style.css](file://src/style.css#L3200-L3316)
+- [store.js:1-333](file://src/store.js#L1-L333)
+- [store.html:1-769](file://store.html#L1-L769)
+- [services.html:1-389](file://services.html#L1-L389)
+- [style.css:3200-3316](file://src/style.css#L3200-L3316)
 
 ## Core Components
 This section outlines the primary components responsible for the store frontend functionality.
@@ -103,12 +109,26 @@ This section outlines the primary components responsible for the store frontend 
   - Persistent cart state using localStorage with enhanced error handling.
   - Notification system for user feedback with success and warning states.
 
+- **Updated** Services Page Enhancements
+  - Enhanced menu descriptions with cultural adaptations for Nigerian cuisine.
+  - Improved service descriptions with better clarity and local relevance.
+  - Comprehensive content structure for gym, salon, games arena, football pitch, and restaurant services.
+
+- **Updated** Mobile-Responsive Layout Improvements
+  - Comprehensive media queries for small phones (up to 480px) with optimized touch targets.
+  - Enhanced medium phone support (481px to 768px) with improved form handling.
+  - Landscape orientation optimizations for better tablet experience.
+  - Touch device optimizations with increased tap targets and hover fallbacks.
+  - Prevents zoom on iOS devices with font-size optimizations.
+
 **Section sources**
-- [store.js](file://src/store.js#L14-L98)
-- [store.js](file://src/store.js#L12-L121)
-- [store.js](file://src/store.js#L238-L286)
-- [store.js](file://src/store.js#L291-L333)
-- [cartManager.js](file://src/cartManager.js#L19-L42)
+- [store.js:14-98](file://src/store.js#L14-L98)
+- [store.js:12-121](file://src/store.js#L12-L121)
+- [store.js:238-286](file://src/store.js#L238-L286)
+- [store.js:291-333](file://src/store.js#L291-L333)
+- [cartManager.js:19-42](file://src/cartManager.js#L19-L42)
+- [services.html:59-353](file://services.html#L59-L353)
+- [style.css:3582-3781](file://src/style.css#L3582-L3781)
 
 ## Architecture Overview
 The store frontend follows a client-server architecture with enhanced error handling and fallback mechanisms:
@@ -119,7 +139,7 @@ The store frontend follows a client-server architecture with enhanced error hand
 - Users interact with filters and add items to the cart, which persists in localStorage with stock validation.
 - Enhanced error handling ensures graceful degradation with retry notifications.
 
-**Updated** Event delegation patterns ensure efficient handling of dynamic content and prevent memory leaks from multiple event listener attachments. The enhanced API integration provides robust fallback behavior and improved user experience during failures.
+**Updated** Event delegation patterns ensure efficient handling of dynamic content and prevent memory leaks from multiple event listener attachments. The enhanced API integration provides robust fallback behavior and improved user experience during failures. The services page enhancements include culturally adapted content with improved descriptions, while mobile-responsive improvements provide optimal touch interactions across all device sizes.
 
 ```mermaid
 sequenceDiagram
@@ -149,10 +169,10 @@ StoreJS->>Cart : cart.addItem(product) with stock validation
 ```
 
 **Diagram sources**
-- [store.js](file://src/store.js#L225-L236)
-- [store.js](file://src/store.js#L37-L121)
-- [products.js](file://src/routes/products.js#L37-L69)
-- [cartManager.js](file://src/cartManager.js#L19-L42)
+- [store.js:225-236](file://src/store.js#L225-L236)
+- [store.js:37-121](file://src/store.js#L37-L121)
+- [products.js:37-69](file://src/routes/products.js#L37-L69)
+- [cartManager.js:19-42](file://src/cartManager.js#L19-L42)
 
 ## Detailed Component Analysis
 
@@ -197,10 +217,10 @@ KeepStatic --> End
 ```
 
 **Diagram sources**
-- [store.js](file://src/store.js#L14-L98)
+- [store.js:14-98](file://src/store.js#L14-L98)
 
 **Section sources**
-- [store.js](file://src/store.js#L14-L98)
+- [store.js:14-98](file://src/store.js#L14-L98)
 
 ### Category Filtering with Event Delegation
 Category filtering operates through interactive buttons and dynamic visibility toggling using event delegation:
@@ -231,10 +251,10 @@ StoreJS->>Cards : Hide otherwise
 ```
 
 **Diagram sources**
-- [store.js](file://src/store.js#L218-L263)
+- [store.js:218-263](file://src/store.js#L218-L263)
 
 **Section sources**
-- [store.js](file://src/store.js#L218-L263)
+- [store.js:218-263](file://src/store.js#L218-L263)
 
 ### Product Card Generation and Data Structures
 Product cards are generated dynamically with consistent structure:
@@ -253,9 +273,9 @@ DOM structure per product card:
 - Product title, formatted price, and add-to-cart button.
 
 **Section sources**
-- [store.js](file://src/store.js#L100-L142)
-- [store.js](file://src/store.js#L144-L184)
-- [store.html](file://store.html#L83-L769)
+- [store.js:100-142](file://src/store.js#L100-L142)
+- [store.js:144-184](file://src/store.js#L144-L184)
+- [store.html:83-769](file://store.html#L83-L769)
 
 ### Price Formatting and Localization
 Price formatting ensures consistent presentation:
@@ -264,7 +284,7 @@ Price formatting ensures consistent presentation:
 - Maintains precision for display while preventing excessive decimals.
 
 **Section sources**
-- [store.js](file://src/store.js#L186-L196)
+- [store.js:186-196](file://src/store.js#L186-L196)
 
 ### User Interaction Handling with Event Delegation
 Add-to-cart interactions are handled with validation and feedback using event delegation:
@@ -297,24 +317,31 @@ Cart-->>User : Show notification
 ```
 
 **Diagram sources**
-- [store.js](file://src/store.js#L268-L333)
-- [cartManager.js](file://src/cartManager.js#L19-L42)
+- [store.js:268-333](file://src/store.js#L268-L333)
+- [cartManager.js:19-42](file://src/cartManager.js#L19-L42)
 
 **Section sources**
-- [store.js](file://src/store.js#L268-L333)
-- [cartManager.js](file://src/cartManager.js#L19-L42)
+- [store.js:268-333](file://src/store.js#L268-L333)
+- [cartManager.js:19-42](file://src/cartManager.js#L19-L42)
 
 ### Responsive Grid Layout Implementation
-The responsive grid adapts to various screen sizes:
+The responsive grid adapts to various screen sizes with comprehensive mobile optimizations:
 - CSS Grid with repeat(auto-fill, minmax(280px, 1fr)) ensures flexible column sizing.
 - Gap spacing maintains consistent layout across breakpoints.
 - Hover effects and animations enhance interactivity.
 - Mobile-first design reduces column count and adjusts typography.
+- **Updated** Comprehensive mobile-responsive improvements including:
+  - Small phones (up to 480px): Optimized button sizing, touch targets, and form inputs.
+  - Medium phones (481px to 768px): Enhanced form handling and layout adjustments.
+  - Landscape orientation: Special optimizations for tablet users.
+  - Touch device optimizations: Increased tap targets and hover fallbacks.
+  - iOS zoom prevention: Font-size optimizations to prevent unwanted zooming.
 
 **Section sources**
-- [style.css](file://src/style.css#L3200-L3205)
-- [style.css](file://src/style.css#L3232-L3235)
-- [style.css](file://src/style.css#L3319-L3346)
+- [style.css:3200-3205](file://src/style.css#L3200-L3205)
+- [style.css:3232-3235](file://src/style.css#L3232-L3235)
+- [style.css:3319-3346](file://src/style.css#L3319-L3346)
+- [style.css:3582-3781](file://src/style.css#L3582-L3781)
 
 ### Sorting and Pagination Strategies
 Sorting and pagination are not implemented in the current frontend:
@@ -326,6 +353,18 @@ Search functionality is not implemented in the current frontend:
 - No search input or query processing logic.
 - Future enhancements could include client-side filtering or backend API integration.
 
+### **Updated** Services Page Content Enhancements
+The services page has been enhanced with improved content and cultural adaptations:
+- **Gym & Fitness Section**: Enhanced equipment descriptions with Nigerian fitness context, expert trainer profiles, and membership information.
+- **Unisex Salon**: Comprehensive service descriptions including facials, haircuts, teeth care, skin tag removal, waxing, and pedicure services with culturally appropriate descriptions.
+- **Games Arena**: Improved VR gaming, PS5 gaming, and billiards descriptions with modern entertainment context.
+- **Football Pitch**: Enhanced booking details with Nigerian sports culture, rates table with local pricing, and tournament organization services.
+- **ZoneBite Restaurant**: Culturally adapted menu descriptions featuring Nigerian favorites like Eba & Egusi, Jollof & Chicken, and Special Fried Rice & Crispy Fish.
+- **Mobile Responsiveness**: Services page benefits from the comprehensive mobile-responsive improvements implemented across the site.
+
+**Section sources**
+- [services.html:59-353](file://services.html#L59-L353)
+
 ## Dependency Analysis
 The store frontend depends on several modules and external APIs:
 - store.js depends on:
@@ -333,8 +372,9 @@ The store frontend depends on several modules and external APIs:
   - Gym Master API via Express routes for product data.
 - CSS styling defines responsive behavior and animations.
 - HTML provides static product cards as fallback content.
+- **Updated** services.html provides enhanced content structure and cultural adaptations.
 
-**Updated** Event delegation patterns reduce direct dependencies on individual DOM elements, improving maintainability and providing better fallback behavior.
+**Updated** Event delegation patterns reduce direct dependencies on individual DOM elements, improving maintainability and providing better fallback behavior. The services page enhances content quality while maintaining compatibility with the existing responsive framework.
 
 ```mermaid
 graph TB
@@ -343,17 +383,20 @@ STOREJS --> ROUTES["products.js<br/>Enhanced error handling"]
 ROUTES --> API["Gym Master API<br/>Timeout & caching"]
 STOREJS --> CSS["style.css"]
 STOREJS --> HTML["store.html"]
+SERVICES["services.html<br/>Enhanced content & cultural adaptations"] --> CSS
 ```
 
 **Diagram sources**
-- [store.js](file://src/store.js#L1-L10)
-- [cartManager.js](file://src/cartManager.js#L1-L91)
-- [products.js](file://src/routes/products.js#L1-L133)
+- [store.js:1-10](file://src/store.js#L1-L10)
+- [cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [products.js:1-133](file://src/routes/products.js#L1-L133)
+- [services.html:1-389](file://services.html#L1-L389)
 
 **Section sources**
-- [store.js](file://src/store.js#L1-L10)
-- [cartManager.js](file://src/cartManager.js#L1-L91)
-- [products.js](file://src/routes/products.js#L1-L133)
+- [store.js:1-10](file://src/store.js#L1-L10)
+- [cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [products.js:1-133](file://src/routes/products.js#L1-L133)
+- [services.html:1-389](file://services.html#L1-L389)
 
 ## Performance Considerations
 Performance optimization strategies for large product catalogs:
@@ -366,8 +409,9 @@ Performance optimization strategies for large product catalogs:
 - Virtual scrolling or pagination for very large datasets.
 - Caching API responses to reduce network overhead.
 - **Enhanced Fallback Strategy**: Conditional content replacement based on product count thresholds to optimize user experience.
+- **Updated** Mobile-Responsive Optimizations: Media queries and touch optimizations improve performance on mobile devices by reducing unnecessary computations and optimizing layout calculations.
 
-**Updated** Event delegation significantly improves performance by reducing the number of event listeners and preventing memory leaks from dynamic content. The enhanced fallback strategy with conditional content replacement optimizes user experience during API failures.
+**Updated** Event delegation significantly improves performance by reducing the number of event listeners and preventing memory leaks from dynamic content. The enhanced fallback strategy with conditional content replacement optimizes user experience during API failures. Mobile-responsive improvements include optimized media queries and touch target adjustments that reduce computational overhead on smaller devices.
 
 ## Troubleshooting Guide
 Common issues and resolutions:
@@ -395,16 +439,22 @@ Common issues and resolutions:
   - Retry notification not appearing: Check that API errors trigger the error handling block.
   - Static content not restored: Verify originalContent storage and restoration logic.
   - Retry button not working: Check event listener attachment and function binding.
+- **Updated** Mobile-Responsive Issues:
+  - Touch targets too small: Verify min-height properties in media queries.
+  - Form input zoom issues: Check font-size optimizations for iOS devices.
+  - Landscape layout problems: Verify orientation-specific media queries.
+  - Button sizing issues: Check max-width and padding adjustments for small screens.
 
-**Updated** Added troubleshooting guidance for enhanced error handling patterns, delegation flags, and fallback mechanisms.
+**Updated** Added troubleshooting guidance for enhanced error handling patterns, delegation flags, fallback mechanisms, and comprehensive mobile-responsive layout issues. The services page content enhancements should be validated for cultural appropriateness and local relevance.
 
 **Section sources**
-- [store.js](file://src/store.js#L14-L98)
-- [store.js](file://src/store.js#L218-L263)
-- [store.js](file://src/store.js#L268-L333)
-- [cartManager.js](file://src/cartManager.js#L19-L42)
+- [store.js:14-98](file://src/store.js#L14-L98)
+- [store.js:218-263](file://src/store.js#L218-L263)
+- [store.js:268-333](file://src/store.js#L268-L333)
+- [cartManager.js:19-42](file://src/cartManager.js#L19-L42)
+- [style.css:3582-3781](file://src/style.css#L3582-L3781)
 
 ## Conclusion
 The store frontend interface in store.js provides a robust foundation for displaying and interacting with products. It integrates seamlessly with the backend API, supports category filtering with event delegation, and offers a responsive grid layout. The enhanced API integration now features improved error handling, better user experience during API failures, and more robust product loading mechanisms. The implementation uses event delegation patterns for improved performance and reliability, with enhanced cart integration including stock validation. The conditional content replacement strategy ensures optimal user experience by only replacing static content when sufficient products are available from the API. While search and advanced sorting are not currently implemented, the modular architecture allows for future enhancements. Proper error handling, performance optimizations, and consolidated internal cart functionality ensure a reliable user experience even during API failures.
 
-**Updated** The enhanced API integration with improved error handling, better user experience during API failures, and more robust product loading mechanisms provides a significantly more resilient and user-friendly store frontend interface. The conditional fallback behavior and retry mechanisms ensure users always have access to product information and cart functionality, regardless of API availability.
+**Updated** The enhanced API integration with improved error handling, better user experience during API failures, and more robust product loading mechanisms provides a significantly more resilient and user-friendly store frontend interface. The conditional fallback behavior and retry mechanisms ensure users always have access to product information and cart functionality, regardless of API availability. The services page enhancements with improved menu descriptions and cultural adaptations provide better local relevance, while comprehensive mobile-responsive layout improvements ensure optimal user experience across all device sizes with touch optimizations and landscape orientation support.

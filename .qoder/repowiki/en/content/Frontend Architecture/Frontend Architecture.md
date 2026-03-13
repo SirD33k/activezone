@@ -21,10 +21,11 @@
 
 ## Update Summary
 **Changes Made**
-- Enhanced orders page initialization system documentation with comprehensive DOM readiness checking
-- Added double initialization prevention using ordersLoaded flag
-- Documented controlled initialization context for auto-refresh mechanisms
-- Updated orders page architecture to reflect improved initialization patterns
+- Enhanced mobile responsiveness system documentation with comprehensive CSS media queries
+- Added responsive button sizing and touch target accessibility improvements
+- Documented extensive mobile UX optimizations across all page types
+- Updated responsive design patterns to reflect modern mobile-first approach
+- Added touch-friendly interface elements and improved mobile navigation
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -32,16 +33,17 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
+6. [Mobile Responsiveness System](#mobile-responsiveness-system)
+7. [Dependency Analysis](#dependency-analysis)
+8. [Performance Considerations](#performance-considerations)
+9. [Troubleshooting Guide](#troubleshooting-guide)
+10. [Conclusion](#conclusion)
 
 ## Introduction
-This document describes the frontend architecture of Active Zone Hub's client-side implementation. It focuses on the modular JavaScript structure, application initialization, interactive systems (carousel, navigation, forms), shopping cart architecture, store frontend, layout management, responsive design, and frontend-to-backend communication. It also covers performance optimization, caching strategies, and browser compatibility considerations.
+This document describes the frontend architecture of Active Zone Hub's client-side implementation. It focuses on the modular JavaScript structure, application initialization, interactive systems (carousel, navigation, forms), shopping cart architecture, store frontend, layout management, responsive design patterns, and frontend-to-backend communication. The system now features a comprehensive mobile responsiveness system with extensive CSS media queries, responsive button sizing, touch target accessibility improvements, and enhanced mobile UX optimizations.
 
 ## Project Structure
-The frontend is organized around single-page HTML templates per major route, with shared styles and modular JavaScript modules. Vite is configured to build multiple entry points mapped to each HTML page. Styles are centralized in a single stylesheet with theme variables and responsive breakpoints.
+The frontend is organized around single-page HTML templates per major route, with shared styles and modular JavaScript modules. Vite is configured to build multiple entry points mapped to each HTML page. Styles are centralized in a single stylesheet with theme variables and responsive breakpoints. The mobile-first approach ensures optimal performance across all device sizes.
 
 ```mermaid
 graph TB
@@ -87,28 +89,28 @@ OrdersRoute --> Style
 ```
 
 **Diagram sources**
-- [index.html](file://index.html#L1-L325)
-- [store.html](file://store.html#L1-L854)
-- [cart.html](file://cart.html#L1-L144)
-- [orders.html](file://orders.html#L1-L1204)
-- [src/main.js](file://src/main.js#L1-L405)
-- [src/layout.js](file://src/layout.js#L1-L93)
-- [src/store.js](file://src/store.js#L1-L316)
-- [src/cartManager.js](file://src/cartManager.js#L1-L91)
-- [src/cart.js](file://src/cart.js#L1-L156)
-- [src/checkout.js](file://src/checkout.js#L1-L438)
-- [src/gallery.js](file://src/gallery.js#L1-L169)
-- [src/routes/orders.js](file://src/routes/orders.js#L1-L405)
-- [src/style.css](file://src/style.css#L1-L800)
-- [vite.config.js](file://vite.config.js#L1-L20)
+- [index.html:1-325](file://index.html#L1-L325)
+- [store.html:1-854](file://store.html#L1-L854)
+- [cart.html:1-144](file://cart.html#L1-L144)
+- [orders.html:1-1204](file://orders.html#L1-L1204)
+- [src/main.js:1-405](file://src/main.js#L1-L405)
+- [src/layout.js:1-93](file://src/layout.js#L1-L93)
+- [src/store.js:1-316](file://src/store.js#L1-L316)
+- [src/cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [src/cart.js:1-156](file://src/cart.js#L1-L156)
+- [src/checkout.js:1-438](file://src/checkout.js#L1-L438)
+- [src/gallery.js:1-169](file://src/gallery.js#L1-L169)
+- [src/routes/orders.js:1-405](file://src/routes/orders.js#L1-L405)
+- [src/style.css:1-3800](file://src/style.css#L1-L3800)
+- [vite.config.js:1-20](file://vite.config.js#L1-L20)
 
 **Section sources**
-- [index.html](file://index.html#L1-L325)
-- [store.html](file://store.html#L1-L854)
-- [cart.html](file://cart.html#L1-L144)
-- [orders.html](file://orders.html#L1-L1204)
-- [vite.config.js](file://vite.config.js#L1-L20)
-- [package.json](file://package.json#L1-L28)
+- [index.html:1-325](file://index.html#L1-L325)
+- [store.html:1-854](file://store.html#L1-L854)
+- [cart.html:1-144](file://cart.html#L1-L144)
+- [orders.html:1-1204](file://orders.html#L1-L1204)
+- [vite.config.js:1-20](file://vite.config.js#L1-L20)
+- [package.json:1-28](file://package.json#L1-L28)
 
 ## Core Components
 - Application bootstrap and global enhancements: Carousel, mobile navigation, scroll animations, lazy images, contact form, membership tabs, and scroll-to-top.
@@ -118,26 +120,29 @@ OrdersRoute --> Style
 - Gallery: Filtering and lightbox with keyboard navigation.
 - Layout injection: Shared navbar and footer across pages.
 - Orders management: Comprehensive order tracking, status updates, CSV export, and inventory management with auto-refresh capabilities.
+- **Enhanced Mobile Responsiveness**: Comprehensive CSS media queries system, responsive button sizing, touch target accessibility, and mobile UX optimizations.
 
 **Section sources**
-- [src/main.js](file://src/main.js#L1-L405)
-- [src/store.js](file://src/store.js#L1-L316)
-- [src/cartManager.js](file://src/cartManager.js#L1-L91)
-- [src/cart.js](file://src/cart.js#L1-L156)
-- [src/checkout.js](file://src/checkout.js#L1-L438)
-- [src/gallery.js](file://src/gallery.js#L1-L169)
-- [src/layout.js](file://src/layout.js#L1-L93)
-- [orders.html](file://orders.html#L1-L1204)
-- [src/routes/orders.js](file://src/routes/orders.js#L1-L405)
+- [src/main.js:1-405](file://src/main.js#L1-L405)
+- [src/store.js:1-316](file://src/store.js#L1-L316)
+- [src/cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [src/cart.js:1-156](file://src/cart.js#L1-L156)
+- [src/checkout.js:1-438](file://src/checkout.js#L1-L438)
+- [src/gallery.js:1-169](file://src/gallery.js#L1-L169)
+- [src/layout.js:1-93](file://src/layout.js#L1-L93)
+- [orders.html:1-1204](file://orders.html#L1-L1204)
+- [src/routes/orders.js:1-405](file://src/routes/orders.js#L1-L405)
+- [src/style.css:1338-1466](file://src/style.css#L1338-L1466)
 
 ## Architecture Overview
-The frontend follows a modular pattern:
+The frontend follows a modular pattern with enhanced mobile responsiveness:
 - Entry pages include only the scripts they need.
 - Shared modules encapsulate reusable logic (cart manager, layout).
 - Store and cart pages depend on the shared cart manager for persistence.
 - Checkout integrates with the cart manager and performs backend validation and submission.
 - Orders page implements sophisticated initialization with DOM readiness checking and auto-refresh mechanisms.
-- Styles are centralized and theme-driven with CSS variables.
+- Styles are centralized and theme-driven with CSS variables and comprehensive mobile media queries.
+- **Mobile-first design**: Extensive responsive breakpoints and touch-friendly interfaces.
 
 ```mermaid
 graph TB
@@ -159,8 +164,10 @@ ORD["orders.html"]
 CH["checkout.html"]
 GA["gallery.html"]
 end
-subgraph "Styles"
+subgraph "Responsive Styles"
 CSS["src/style.css"]
+CSS768["Mobile Queries @768px"]
+CSS600["Mobile Queries @600px"]
 end
 H --> M
 ST --> S
@@ -179,18 +186,20 @@ CK --> CSS
 G --> CSS
 O --> CSS
 OR --> CSS
+CSS --> CSS768
+CSS --> CSS600
 ```
 
 **Diagram sources**
-- [src/main.js](file://src/main.js#L1-L405)
-- [src/store.js](file://src/store.js#L1-L316)
-- [src/cartManager.js](file://src/cartManager.js#L1-L91)
-- [src/cart.js](file://src/cart.js#L1-L156)
-- [src/checkout.js](file://src/checkout.js#L1-L438)
-- [src/gallery.js](file://src/gallery.js#L1-L169)
-- [orders.html](file://orders.html#L1-L1204)
-- [src/routes/orders.js](file://src/routes/orders.js#L1-L405)
-- [src/style.css](file://src/style.css#L1-L800)
+- [src/main.js:1-405](file://src/main.js#L1-L405)
+- [src/store.js:1-316](file://src/store.js#L1-L316)
+- [src/cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [src/cart.js:1-156](file://src/cart.js#L1-L156)
+- [src/checkout.js:1-438](file://src/checkout.js#L1-L438)
+- [src/gallery.js:1-169](file://src/gallery.js#L1-L169)
+- [orders.html:1-1204](file://orders.html#L1-L1204)
+- [src/routes/orders.js:1-405](file://src/routes/orders.js#L1-L405)
+- [src/style.css:1338-1466](file://src/style.css#L1338-L1466)
 
 ## Detailed Component Analysis
 
@@ -227,10 +236,10 @@ Form->>Form : Re-enable submit and reset text
 ```
 
 **Diagram sources**
-- [src/main.js](file://src/main.js#L1-L405)
+- [src/main.js:1-405](file://src/main.js#L1-L405)
 
 **Section sources**
-- [src/main.js](file://src/main.js#L1-L405)
+- [src/main.js:1-405](file://src/main.js#L1-L405)
 
 ### Layout Management (src/layout.js)
 Responsibilities:
@@ -248,10 +257,10 @@ InitMenu --> End(["Done"])
 ```
 
 **Diagram sources**
-- [src/layout.js](file://src/layout.js#L1-L93)
+- [src/layout.js:1-93](file://src/layout.js#L1-L93)
 
 **Section sources**
-- [src/layout.js](file://src/layout.js#L1-L93)
+- [src/layout.js:1-93](file://src/layout.js#L1-L93)
 
 ### Store Frontend (src/store.js)
 Responsibilities:
@@ -275,11 +284,11 @@ Page->>CartMgr : cart.addItem(product)
 ```
 
 **Diagram sources**
-- [src/store.js](file://src/store.js#L12-L165)
+- [src/store.js:12-165](file://src/store.js#L12-L165)
 
 **Section sources**
-- [src/store.js](file://src/store.js#L1-L316)
-- [store.html](file://store.html#L1-L854)
+- [src/store.js:1-316](file://src/store.js#L1-L316)
+- [store.html:1-854](file://store.html#L1-L854)
 
 ### Shopping Cart System (src/cartManager.js + src/cart.js)
 Responsibilities:
@@ -309,13 +318,13 @@ ShoppingCart <.. CartPage : "used by"
 ```
 
 **Diagram sources**
-- [src/cartManager.js](file://src/cartManager.js#L1-L91)
-- [src/cart.js](file://src/cart.js#L1-L156)
+- [src/cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [src/cart.js:1-156](file://src/cart.js#L1-L156)
 
 **Section sources**
-- [src/cartManager.js](file://src/cartManager.js#L1-L91)
-- [src/cart.js](file://src/cart.js#L1-L156)
-- [cart.html](file://cart.html#L1-L144)
+- [src/cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [src/cart.js:1-156](file://src/cart.js#L1-L156)
+- [cart.html:1-144](file://cart.html#L1-L144)
 
 ### Checkout Workflow (src/checkout.js)
 Responsibilities:
@@ -352,10 +361,10 @@ Page->>User : Redirect or alert
 ```
 
 **Diagram sources**
-- [src/checkout.js](file://src/checkout.js#L147-L436)
+- [src/checkout.js:147-436](file://src/checkout.js#L147-L436)
 
 **Section sources**
-- [src/checkout.js](file://src/checkout.js#L1-L438)
+- [src/checkout.js:1-438](file://src/checkout.js#L1-L438)
 
 ### Orders Management System (orders.html + src/routes/orders.js)
 Responsibilities:
@@ -393,12 +402,12 @@ end
 ```
 
 **Diagram sources**
-- [orders.html](file://orders.html#L1041-L1065)
-- [src/routes/orders.js](file://src/routes/orders.js#L213-L268)
+- [orders.html:1041-1065](file://orders.html#L1041-L1065)
+- [src/routes/orders.js:213-268](file://src/routes/orders.js#L213-L268)
 
 **Section sources**
-- [orders.html](file://orders.html#L1-L1204)
-- [src/routes/orders.js](file://src/routes/orders.js#L1-L405)
+- [orders.html:1-1204](file://orders.html#L1-L1204)
+- [src/routes/orders.js:1-405](file://src/routes/orders.js#L1-L405)
 
 ### Gallery Filtering and Lightbox (src/gallery.js)
 Responsibilities:
@@ -416,10 +425,53 @@ ShowHide --> End
 ```
 
 **Diagram sources**
-- [src/gallery.js](file://src/gallery.js#L14-L59)
+- [src/gallery.js:14-59](file://src/gallery.js#L14-L59)
 
 **Section sources**
-- [src/gallery.js](file://src/gallery.js#L1-L169)
+- [src/gallery.js:1-169](file://src/gallery.js#L1-L169)
+
+## Mobile Responsiveness System
+
+### Comprehensive CSS Media Queries
+The system implements extensive mobile-first responsive design with strategic breakpoints:
+
+**Primary Mobile Breakpoints:**
+- **768px breakpoint**: Major layout transformations for tablets and larger phones
+- **600px breakpoint**: Additional refinements for smaller mobile devices
+- **Variable-based responsive units**: Flexible sizing using CSS custom properties
+
+**Key Responsive Features:**
+- **Hero Carousel**: Reduced font sizes, adjusted button positioning, and scaled controls
+- **Navigation System**: Full-screen mobile menu with animated hamburger transform
+- **Product Grids**: Adaptive grid layouts with auto-fit and minmax constraints
+- **Contact Forms**: Single-column layout with appropriately sized form elements
+- **Membership Plans**: Stacked layouts for mobile viewing
+- **Gallery Masonry**: Responsive grid with flexible column widths
+
+### Touch Target Accessibility Improvements
+- **Minimum 44px touch targets**: Ensures compliance with WCAG guidelines
+- **Ample spacing**: 15px+ gaps between interactive elements
+- **Scalable buttons**: Responsive padding and font sizes for finger-friendly interaction
+- **Touch-friendly navigation**: Expanded tap areas for menu items and buttons
+
+### Responsive Button Sizing System
+- **Consistent sizing**: All buttons use responsive padding and font scaling
+- **Mobile-optimized**: Buttons increase in size for better thumb reach
+- **Accessibility compliance**: Minimum 44px touch targets across all interactive elements
+- **Visual hierarchy**: Appropriate contrast ratios maintained at all sizes
+
+### Mobile UX Optimizations
+- **Progressive disclosure**: Complex menus collapse to hamburger navigation
+- **Flexible layouts**: Grid systems adapt to screen real estate
+- **Performance optimizations**: Reduced animations and simplified effects on mobile
+- **Input field sizing**: Text inputs and buttons scale appropriately for mobile keyboards
+
+**Section sources**
+- [src/style.css:1338-1466](file://src/style.css#L1338-L1466)
+- [src/style.css:852-856](file://src/style.css#L852-L856)
+- [src/main.js:88-119](file://src/main.js#L88-L119)
+- [store.html:1-200](file://store.html#L1-L200)
+- [cart.html:1-144](file://cart.html#L1-L144)
 
 ## Dependency Analysis
 - Entry pages depend on specific modules:
@@ -430,7 +482,7 @@ ShowHide --> End
   - checkout.html loads src/checkout.js and src/cartManager.js for checkout and order submission.
   - gallery.html loads src/gallery.js for filtering and lightbox.
 - Shared dependencies:
-  - src/style.css provides theming and responsive design.
+  - src/style.css provides theming, responsive design, and mobile optimizations.
   - Vite configuration defines multiple entry points for each HTML page.
 
 ```mermaid
@@ -453,22 +505,22 @@ OrdersRoute --> Style
 ```
 
 **Diagram sources**
-- [index.html](file://index.html#L1-L325)
-- [store.html](file://store.html#L1-L854)
-- [cart.html](file://cart.html#L1-L144)
-- [orders.html](file://orders.html#L1-L1204)
-- [src/main.js](file://src/main.js#L1-L405)
-- [src/store.js](file://src/store.js#L1-L316)
-- [src/cartManager.js](file://src/cartManager.js#L1-L91)
-- [src/cart.js](file://src/cart.js#L1-L156)
-- [src/checkout.js](file://src/checkout.js#L1-L438)
-- [src/gallery.js](file://src/gallery.js#L1-L169)
-- [src/routes/orders.js](file://src/routes/orders.js#L1-L405)
-- [src/style.css](file://src/style.css#L1-L800)
+- [index.html:1-325](file://index.html#L1-L325)
+- [store.html:1-854](file://store.html#L1-L854)
+- [cart.html:1-144](file://cart.html#L1-L144)
+- [orders.html:1-1204](file://orders.html#L1-L1204)
+- [src/main.js:1-405](file://src/main.js#L1-L405)
+- [src/store.js:1-316](file://src/store.js#L1-L316)
+- [src/cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [src/cart.js:1-156](file://src/cart.js#L1-L156)
+- [src/checkout.js:1-438](file://src/checkout.js#L1-L438)
+- [src/gallery.js:1-169](file://src/gallery.js#L1-L169)
+- [src/routes/orders.js:1-405](file://src/routes/orders.js#L1-L405)
+- [src/style.css:1-3800](file://src/style.css#L1-L3800)
 
 **Section sources**
-- [vite.config.js](file://vite.config.js#L1-L20)
-- [package.json](file://package.json#L1-L28)
+- [vite.config.js:1-20](file://vite.config.js#L1-L20)
+- [package.json:1-28](file://package.json#L1-L28)
 
 ## Performance Considerations
 - Resource preloading:
@@ -489,6 +541,10 @@ OrdersRoute --> Style
   - Orders refresh every 30 seconds, inventory every 60 seconds to balance responsiveness with performance.
 - DOM readiness optimization:
   - Intelligent initialization prevents unnecessary processing during page load.
+- **Mobile optimization**:
+  - Responsive breakpoints reduce unnecessary rendering on smaller screens.
+  - Touch-friendly interfaces minimize interaction overhead.
+  - Progressive enhancement ensures core functionality works without JavaScript.
 
 ## Troubleshooting Guide
 Common issues and resolutions:
@@ -510,15 +566,25 @@ Common issues and resolutions:
   - Verify setInterval timers are properly set and authentication is maintained.
 - CSV export failing:
   - Ensure orders are loaded and filters are properly applied before export.
+- **Mobile responsiveness issues**:
+  - Verify viewport meta tag is present in HTML head.
+  - Check CSS media query syntax and breakpoint values.
+  - Ensure touch targets meet minimum 44px requirements.
+  - Test responsive layouts across different device sizes and orientations.
 
 **Section sources**
-- [src/main.js](file://src/main.js#L1-L405)
-- [src/store.js](file://src/store.js#L1-L316)
-- [src/cartManager.js](file://src/cartManager.js#L1-L91)
-- [src/checkout.js](file://src/checkout.js#L1-L438)
-- [src/gallery.js](file://src/gallery.js#L1-L169)
-- [orders.html](file://orders.html#L1-L1204)
-- [src/routes/orders.js](file://src/routes/orders.js#L1-L405)
+- [src/main.js:1-405](file://src/main.js#L1-L405)
+- [src/store.js:1-316](file://src/store.js#L1-L316)
+- [src/cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [src/checkout.js:1-438](file://src/checkout.js#L1-L438)
+- [src/gallery.js:1-169](file://src/gallery.js#L1-L169)
+- [orders.html:1-1204](file://orders.html#L1-L1204)
+- [src/routes/orders.js:1-405](file://src/routes/orders.js#L1-L405)
+- [src/style.css:1338-1466](file://src/style.css#L1338-L1466)
 
 ## Conclusion
-Active Zone Hub's frontend employs a modular, maintainable architecture with clear separation of concerns. Global enhancements in main.js provide consistent UX across pages, while specialized modules handle store display, cart persistence, checkout flows, gallery interactions, and comprehensive order management. The orders page implements sophisticated initialization patterns with DOM readiness checking, double initialization prevention, and controlled auto-refresh mechanisms. Centralized styling ensures cohesive theming and responsive behavior. The design supports performance through lazy loading, preconnects, conservative API usage, intelligent initialization, and optimized auto-refresh cycles, with robust fallbacks for reliability.
+Active Zone Hub's frontend employs a modular, maintainable architecture with clear separation of concerns and comprehensive mobile responsiveness. Global enhancements in main.js provide consistent UX across pages, while specialized modules handle store display, cart persistence, checkout flows, gallery interactions, and comprehensive order management. The orders page implements sophisticated initialization patterns with DOM readiness checking, double initialization prevention, and controlled auto-refresh mechanisms. 
+
+**Enhanced Mobile Experience**: The system now features a comprehensive mobile responsiveness system with extensive CSS media queries, responsive button sizing, touch target accessibility improvements, and enhanced mobile UX optimizations. Strategic breakpoints at 768px and 600px ensure optimal performance across all device sizes, while touch-friendly interfaces and progressive disclosure patterns provide intuitive navigation on mobile devices.
+
+Centralized styling ensures cohesive theming and responsive behavior with mobile-first design principles. The design supports performance through lazy loading, preconnects, conservative API usage, intelligent initialization, optimized auto-refresh cycles, and mobile-specific optimizations with robust fallbacks for reliability. The architecture seamlessly adapts to various screen sizes while maintaining accessibility standards and user experience quality.
