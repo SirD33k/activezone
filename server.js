@@ -2026,17 +2026,15 @@ app.post('/api/orders', [
         try {
             // Initialize Paystack transaction
             // Determine the base URL for callback - prioritize Vercel URL, then APP_URL, then default
+            // IMPORTANT: Always use production URL for callback, NOT VERCEL_URL (preview URLs require auth)
             let appBaseUrl;
-            if (process.env.VERCEL_URL) {
-                // Vercel automatically sets this (without protocol)
-                appBaseUrl = `https://${process.env.VERCEL_URL}`;
-                console.log('Using VERCEL_URL:', appBaseUrl);
-            } else if (process.env.APP_URL) {
+            if (process.env.APP_URL) {
                 appBaseUrl = process.env.APP_URL.replace(/\/$/, '').replace('/api', '');
                 console.log('Using APP_URL:', appBaseUrl);
             } else {
+                // Default to production URL - NEVER use VERCEL_URL as it's a preview URL requiring auth
                 appBaseUrl = 'https://activezone.vercel.app';
-                console.log('Using default URL:', appBaseUrl);
+                console.log('Using default production URL:', appBaseUrl);
             }
             
             const paystackData = {
