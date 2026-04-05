@@ -14,15 +14,16 @@
 - [main.js](file://src/main.js)
 - [vercel.json](file://vercel.json)
 - [api/index.js](file://api/index.js)
+- [style.css](file://src/style.css)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Enhanced Gym Master integration with conditional processing and fallback mechanisms
-- Improved Paystack payment initialization with better error handling
-- Added Vercel deployment compatibility with serverless function support
-- Updated checkout flow to handle Gym Master API responses and conditional logic
-- Enhanced error handling throughout the payment flow with fallback options
+- Enhanced mobile-responsive design with stacked layouts for checkout forms
+- Improved touch-friendly input sizing with larger font sizes and padding
+- Enhanced cart sidebar functionality for mobile users with full-width containers
+- Updated checkout form containers to use responsive widths and adaptive padding
+- Implemented progressive disclosure patterns optimized for mobile devices
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -30,21 +31,22 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
+6. [Mobile-Responsive Design Implementation](#mobile-responsive-design-implementation)
+7. [Dependency Analysis](#dependency-analysis)
+8. [Performance Considerations](#performance-considerations)
+9. [Troubleshooting Guide](#troubleshooting-guide)
+10. [Conclusion](#conclusion)
 
 ## Introduction
-This document provides comprehensive documentation for the checkout process implementation in checkout.js. It explains the checkout flow management, form validation, shipping address handling, and payment processing coordination. The system now includes enhanced Gym Master integration with conditional processing, improved Paystack payment initialization, and better Vercel deployment compatibility. It details the step-by-step checkout progression, error handling for incomplete forms, and state persistence during checkout. It also covers integration with external payment systems, order submission processes, and success/error callback handling. Examples of form validation logic, data sanitization, and user feedback mechanisms are included. The relationship between checkout.js and the cart system is documented, showing how checkout data is derived from cart state. Security considerations for sensitive data, performance optimization for checkout forms, and user experience patterns for multi-step checkout processes are addressed.
+This document provides comprehensive documentation for the checkout process implementation in checkout.js. It explains the checkout flow management, form validation, shipping address handling, and payment processing coordination. The system now includes enhanced mobile-responsive design with stacked layouts, touch-friendly input sizing, and improved cart sidebar functionality optimized for mobile users. It details the step-by-step checkout progression, error handling for incomplete forms, and state persistence during checkout. It also covers integration with external payment systems, order submission processes, and success/error callback handling. Examples of form validation logic, data sanitization, and user feedback mechanisms are included. The relationship between checkout.js and the cart system is documented, showing how checkout data is derived from cart state. Security considerations for sensitive data, performance optimization for checkout forms, and user experience patterns for multi-step checkout processes are addressed.
 
 ## Project Structure
-The checkout system spans several files with enhanced Gym Master integration:
-- checkout.js: Implements the checkout page logic, form handling, and payment coordination with Gym Master
-- checkout.html: Provides the checkout page markup and UI structure
+The checkout system spans several files with enhanced mobile-responsive design:
+- checkout.js: Implements the checkout page logic, form handling, and payment coordination
+- checkout.html: Provides the checkout page markup and UI structure with responsive design
 - cartManager.js: Manages the shopping cart state using localStorage
-- cart.js: Handles cart page rendering and user interactions
-- server.js: Enhanced backend with Gym Master integration and conditional processing
+- cart.js: Handles cart page rendering and user interactions with mobile optimization
+- server.js: Backend processing with Gym Master integration
 - orders.js: Orders route with Gym Master API integration
 - payment.js: Backend route for order creation and payment initialization
 - payment-success.html: Payment verification and success/failure UI
@@ -52,6 +54,7 @@ The checkout system spans several files with enhanced Gym Master integration:
 - main.js: Global application enhancements and shared functionality
 - vercel.json: Vercel deployment configuration with serverless support
 - api/index.js: Vercel serverless API handler
+- style.css: Comprehensive CSS with mobile-responsive checkout styling
 
 ```mermaid
 graph TB
@@ -62,6 +65,7 @@ CM["cartManager.js"]
 CJS["cart.js"]
 MS["main.js"]
 PS["payment-success.html"]
+ST["style.css"]
 end
 subgraph "Backend"
 SV["server.js"]
@@ -84,35 +88,39 @@ SV --> PJ
 SV --> OD
 VC --> AI
 AI --> SV
+ST --> CJ
+ST --> CH
 ```
 
 **Diagram sources**
-- [checkout.js](file://src/checkout.js#L1-L448)
-- [checkout.html](file://checkout.html#L1-L274)
-- [cartManager.js](file://src/cartManager.js#L1-L91)
-- [cart.js](file://src/cart.js#L1-L156)
-- [server.js](file://server.js#L1-L2281)
-- [orders.js](file://src/routes/orders.js#L1-L371)
-- [payment.js](file://src/routes/payment.js#L1-L154)
-- [payment-success.html](file://payment-success.html#L1-L219)
-- [orders-data.json](file://orders-data.json#L1-L66)
-- [main.js](file://src/main.js#L1-L405)
-- [vercel.json](file://vercel.json#L1-L27)
-- [api/index.js](file://api/index.js#L1-L5)
+- [checkout.js:1-448](file://src/checkout.js#L1-L448)
+- [checkout.html:1-274](file://checkout.html#L1-L274)
+- [cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [cart.js:1-156](file://src/cart.js#L1-L156)
+- [server.js:1-2281](file://server.js#L1-L2281)
+- [orders.js:1-371](file://src/routes/orders.js#L1-L371)
+- [payment.js:1-154](file://src/routes/payment.js#L1-L154)
+- [payment-success.html:1-219](file://payment-success.html#L1-L219)
+- [orders-data.json:1-66](file://orders-data.json#L1-L66)
+- [main.js:1-405](file://src/main.js#L1-L405)
+- [vercel.json:1-27](file://vercel.json#L1-L27)
+- [api/index.js:1-5](file://api/index.js#L1-L5)
+- [style.css:3947-4070](file://src/style.css#L3947-L4070)
 
 **Section sources**
-- [checkout.js](file://src/checkout.js#L1-L448)
-- [checkout.html](file://checkout.html#L1-L274)
-- [cartManager.js](file://src/cartManager.js#L1-L91)
-- [cart.js](file://src/cart.js#L1-L156)
-- [server.js](file://server.js#L1-L2281)
-- [orders.js](file://src/routes/orders.js#L1-L371)
-- [payment.js](file://src/routes/payment.js#L1-L154)
-- [payment-success.html](file://payment-success.html#L1-L219)
-- [orders-data.json](file://orders-data.json#L1-L66)
-- [main.js](file://src/main.js#L1-L405)
-- [vercel.json](file://vercel.json#L1-L27)
-- [api/index.js](file://api/index.js#L1-L5)
+- [checkout.js:1-448](file://src/checkout.js#L1-L448)
+- [checkout.html:1-274](file://checkout.html#L1-L274)
+- [cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [cart.js:1-156](file://src/cart.js#L1-L156)
+- [server.js:1-2281](file://server.js#L1-L2281)
+- [orders.js:1-371](file://src/routes/orders.js#L1-L371)
+- [payment.js:1-154](file://src/routes/payment.js#L1-L154)
+- [payment-success.html:1-219](file://payment-success.html#L1-L219)
+- [orders-data.json:1-66](file://orders-data.json#L1-L66)
+- [main.js:1-405](file://src/main.js#L1-L405)
+- [vercel.json:1-27](file://vercel.json#L1-L27)
+- [api/index.js:1-5](file://api/index.js#L1-L5)
+- [style.css:3947-4070](file://src/style.css#L3947-L4070)
 
 ## Core Components
 - Checkout page controller: Initializes cart state, renders checkout items, updates totals, and coordinates form submission with Gym Master integration
@@ -121,6 +129,7 @@ AI --> SV
 - Payment route: Creates orders, initializes payment with Paystack, and verifies payment status
 - Payment success page: Verifies payment reference and displays success/failure states
 - Vercel deployment: Serverless API handler for production deployment
+- Mobile-responsive design: Stacked layouts, touch-friendly inputs, and optimized cart sidebar for mobile users
 
 Key responsibilities:
 - Form validation and user feedback with Gym Master integration
@@ -130,15 +139,17 @@ Key responsibilities:
 - Order submission and payment redirection with enhanced error handling
 - State persistence across page reloads
 - Vercel deployment compatibility with serverless functions
+- Mobile-first responsive design implementation
 
 **Section sources**
-- [checkout.js](file://src/checkout.js#L1-L448)
-- [cartManager.js](file://src/cartManager.js#L1-L91)
-- [server.js](file://server.js#L1798-L1978)
-- [orders.js](file://src/routes/orders.js#L234-L325)
+- [checkout.js:1-448](file://src/checkout.js#L1-L448)
+- [cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [server.js:1798-1978](file://server.js#L1798-L1978)
+- [orders.js:234-325](file://src/routes/orders.js#L234-L325)
+- [style.css:3947-4070](file://src/style.css#L3947-L4070)
 
 ## Architecture Overview
-The checkout process follows a client-server architecture with frontend validation and backend processing, now enhanced with Gym Master integration and conditional processing:
+The checkout process follows a client-server architecture with frontend validation and backend processing, now enhanced with comprehensive mobile-responsive design:
 
 ```mermaid
 sequenceDiagram
@@ -146,11 +157,14 @@ participant U as "User"
 participant CH as "Checkout Page"
 participant CJ as "checkout.js"
 participant CM as "Cart Manager"
+participant ST as "Style.css"
 participant SV as "Enhanced Server"
 participant GM as "Gym Master API"
 participant PS as "Payment Success Page"
 participant OD as "Orders Storage"
-U->>CH : Access checkout page
+U->>CH : Access checkout page (Mobile/Tablet)
+CH->>ST : Apply mobile-responsive styles
+ST->>CH : Stacked layouts, touch-friendly inputs
 CH->>CJ : Initialize checkout
 CJ->>CM : Load cart state
 CJ->>CJ : Render checkout items & totals
@@ -174,11 +188,12 @@ PS-->>U : Show success/failure
 ```
 
 **Diagram sources**
-- [checkout.js](file://src/checkout.js#L149-L446)
-- [server.js](file://server.js#L1798-L1978)
-- [orders.js](file://src/routes/orders.js#L234-L325)
-- [payment-success.html](file://payment-success.html#L170-L216)
-- [orders-data.json](file://orders-data.json#L1-L66)
+- [checkout.js:149-446](file://src/checkout.js#L149-L446)
+- [server.js:1798-1978](file://server.js#L1798-L1978)
+- [orders.js:234-325](file://src/routes/orders.js#L234-L325)
+- [payment-success.html:170-216](file://payment-success.html#L170-L216)
+- [orders-data.json:1-66](file://orders-data.json#L1-L66)
+- [style.css:3947-4070](file://src/style.css#L3947-L4070)
 
 ## Detailed Component Analysis
 
@@ -235,11 +250,11 @@ ReloadPage --> End
 ```
 
 **Diagram sources**
-- [checkout.js](file://src/checkout.js#L149-L446)
+- [checkout.js:149-446](file://src/checkout.js#L149-L446)
 
 **Section sources**
-- [checkout.js](file://src/checkout.js#L24-L90)
-- [checkout.js](file://src/checkout.js#L149-L446)
+- [checkout.js:24-90](file://src/checkout.js#L24-L90)
+- [checkout.js:149-446](file://src/checkout.js#L149-L446)
 
 ### Enhanced Server Integration
 The server now includes comprehensive Gym Master integration with conditional processing:
@@ -280,14 +295,14 @@ SV-->>CJ : Verification Result
 ```
 
 **Diagram sources**
-- [server.js](file://server.js#L1798-L1978)
-- [server.js](file://server.js#L286-L291)
-- [orders.js](file://src/routes/orders.js#L234-L325)
+- [server.js:1798-1978](file://server.js#L1798-L1978)
+- [server.js:286-291](file://server.js#L286-L291)
+- [orders.js:234-325](file://src/routes/orders.js#L234-L325)
 
 **Section sources**
-- [server.js](file://server.js#L1798-L1978)
-- [server.js](file://server.js#L286-L291)
-- [orders.js](file://src/routes/orders.js#L234-L325)
+- [server.js:1798-1978](file://server.js#L1798-L1978)
+- [server.js:286-291](file://server.js#L286-L291)
+- [orders.js:234-325](file://src/routes/orders.js#L234-L325)
 
 ### Cart System Integration
 The checkout system integrates with the cart through the ShoppingCart class:
@@ -323,13 +338,13 @@ ShoppingCart --> CheckoutController : "provides cart state"
 ```
 
 **Diagram sources**
-- [cartManager.js](file://src/cartManager.js#L3-L90)
-- [checkout.js](file://src/checkout.js#L91-L137)
+- [cartManager.js:3-90](file://src/cartManager.js#L3-L90)
+- [checkout.js:91-137](file://src/checkout.js#L91-L137)
 
 **Section sources**
-- [cartManager.js](file://src/cartManager.js#L1-L91)
-- [cart.js](file://src/cart.js#L1-L156)
-- [checkout.js](file://src/checkout.js#L6-L22)
+- [cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [cart.js:1-156](file://src/cart.js#L1-L156)
+- [checkout.js:6-22](file://src/checkout.js#L6-L22)
 
 ### Enhanced Payment Processing Pipeline
 The payment system handles order creation and payment initialization with improved error handling:
@@ -375,18 +390,18 @@ SV-->>CJ : Verification Result
 ```
 
 **Diagram sources**
-- [server.js](file://server.js#L1798-L1978)
-- [orders.js](file://src/routes/orders.js#L234-L325)
-- [payment.js](file://src/routes/payment.js#L31-L110)
-- [payment-success.html](file://payment-success.html#L170-L216)
+- [server.js:1798-1978](file://server.js#L1798-L1978)
+- [orders.js:234-325](file://src/routes/orders.js#L234-L325)
+- [payment.js:31-110](file://src/routes/payment.js#L31-L110)
+- [payment-success.html:170-216](file://payment-success.html#L170-L216)
 
 **Section sources**
-- [server.js](file://server.js#L1798-L1978)
-- [orders.js](file://src/routes/orders.js#L234-L325)
-- [payment.js](file://src/routes/payment.js#L31-L110)
-- [payment.js](file://src/routes/payment.js#L112-L151)
-- [payment-success.html](file://payment-success.html#L170-L216)
-- [orders-data.json](file://orders-data.json#L1-L66)
+- [server.js:1798-1978](file://server.js#L1798-L1978)
+- [orders.js:234-325](file://src/routes/orders.js#L234-L325)
+- [payment.js:31-110](file://src/routes/payment.js#L31-L110)
+- [payment.js:112-151](file://src/routes/payment.js#L112-L151)
+- [payment-success.html:170-216](file://payment-success.html#L170-L216)
+- [orders-data.json:1-66](file://orders-data.json#L1-L66)
 
 ### Vercel Deployment Compatibility
 The system now includes enhanced Vercel deployment support:
@@ -402,9 +417,9 @@ The system now includes enhanced Vercel deployment support:
 - Support for Vercel's serverless function architecture
 
 **Section sources**
-- [vercel.json](file://vercel.json#L1-L27)
-- [api/index.js](file://api/index.js#L1-L5)
-- [checkout.js](file://src/checkout.js#L10-L11)
+- [vercel.json:1-27](file://vercel.json#L1-L27)
+- [api/index.js:1-5](file://api/index.js#L1-L5)
+- [checkout.js:10-11](file://src/checkout.js#L10-L11)
 
 ### User Experience Patterns
 The checkout interface implements several UX patterns with enhanced functionality:
@@ -425,9 +440,83 @@ The checkout interface implements several UX patterns with enhanced functionalit
 - Focus management during form transitions
 
 **Section sources**
-- [checkout.html](file://checkout.html#L70-L189)
-- [checkout.js](file://src/checkout.js#L24-L90)
-- [checkout.js](file://src/checkout.js#L149-L446)
+- [checkout.html:70-189](file://checkout.html#L70-L189)
+- [checkout.js:24-90](file://src/checkout.js#L24-L90)
+- [checkout.js:149-446](file://src/checkout.js#L149-L446)
+
+## Mobile-Responsive Design Implementation
+
+### Stacked Layouts for Smaller Screens
+The checkout system implements responsive design patterns optimized for mobile devices:
+
+#### Checkout Content Layout
+- Desktop: Two-column grid layout with form and summary side-by-side
+- Tablet (768px and below): Column layout with form above summary
+- Mobile (480px and below): Single column with stacked elements
+
+#### Form Container Optimization
+- Full-width containers that adapt to screen size
+- Increased padding for better touch interaction
+- Responsive typography with larger font sizes for mobile readability
+
+#### Touch-Friendly Input Sizing
+- Input elements receive `font-size: 16px !important` for mobile accessibility
+- Increased padding (`12px`) for easier touch targeting
+- Larger button sizes with `padding: 14px` for mobile users
+
+#### Enhanced Delivery Options
+- Delivery options stack vertically on smaller screens
+- Reduced spacing (`gap: 10px`) for compact layouts
+- Adaptive padding for better touch targets
+
+```mermaid
+graph TB
+subgraph "Desktop Layout"
+DC["Grid: 1.5fr 1fr"]
+DF["Form Container"]
+DS["Summary Container"]
+end
+subgraph "Tablet Layout (≤768px)"
+TC["Column: Flex Direction"]
+TF["Form Container<br/>Width: 100%"]
+TS["Summary Container<br/>Position: Static"]
+end
+subgraph "Mobile Layout (≤480px)"
+MC["Single Column"]
+MF["Touch-Friendly Inputs<br/>Font Size: 16px<br/>Padding: 12px"]
+MS["Compact Delivery Options<br/>Stacked Layout"]
+end
+DC --> TC
+TC --> MC
+DF --> TF
+DS --> TS
+```
+
+**Diagram sources**
+- [style.css:3951-4029](file://src/style.css#L3951-L4029)
+- [style.css:4031-4069](file://src/style.css#L4031-L4069)
+
+### Cart Sidebar Enhancement for Mobile Users
+The cart sidebar functionality has been optimized for mobile device usage:
+
+#### Full-Width Mobile Containers
+- Cart sidebar uses `width: 100%` and `max-width: 100%` for mobile screens
+- Right positioning with `right: -100%` for slide-in animation
+- Smooth transition effects for opening/closing cart
+
+#### Flexible Item Layout
+- Cart items wrap with `flex-wrap: wrap` for better mobile presentation
+- Adaptive image sizes (`width: 60px`, `height: 60px`)
+- Reordered quantity controls with `order: 3` for logical mobile flow
+
+#### Enhanced Mobile Typography
+- Reduced font sizes for cart item details (`font-size: 0.85rem`)
+- Compact total displays with `font-size: 0.9rem`
+- Optimized spacing for touch interaction
+
+**Section sources**
+- [style.css:3848-3887](file://src/style.css#L3848-L3887)
+- [style.css:3947-4070](file://src/style.css#L3947-L4070)
 
 ## Dependency Analysis
 The checkout system has clear dependencies and enhanced integration with Gym Master:
@@ -446,12 +535,14 @@ OD["orders-data.json"]
 MS["main.js"]
 VC["vercel.json"]
 AI["api/index.js"]
+ST["style.css"]
 GM["Gym Master API"]
 PSK["Paystack API"]
 CH --> CJ
 CJ --> CM
 CJ --> SV
 CJ --> PS
+CJ --> ST
 CJS --> CM
 SV --> OR
 SV --> PJ
@@ -462,25 +553,29 @@ PS --> SV
 VC --> AI
 AI --> SV
 MS --> CJ
+ST --> CJ
+ST --> CH
 ```
 
 **Diagram sources**
-- [checkout.js](file://src/checkout.js#L1-L448)
-- [checkout.html](file://checkout.html#L1-L274)
-- [cartManager.js](file://src/cartManager.js#L1-L91)
-- [cart.js](file://src/cart.js#L1-L156)
-- [server.js](file://server.js#L1-L2281)
-- [orders.js](file://src/routes/orders.js#L1-L371)
-- [payment.js](file://src/routes/payment.js#L1-L154)
-- [payment-success.html](file://payment-success.html#L1-L219)
-- [orders-data.json](file://orders-data.json#L1-L66)
-- [main.js](file://src/main.js#L1-L405)
-- [vercel.json](file://vercel.json#L1-L27)
-- [api/index.js](file://api/index.js#L1-L5)
+- [checkout.js:1-448](file://src/checkout.js#L1-L448)
+- [checkout.html:1-274](file://checkout.html#L1-L274)
+- [cartManager.js:1-91](file://src/cartManager.js#L1-L91)
+- [cart.js:1-156](file://src/cart.js#L1-L156)
+- [server.js:1-2281](file://server.js#L1-L2281)
+- [orders.js:1-371](file://src/routes/orders.js#L1-L371)
+- [payment.js:1-154](file://src/routes/payment.js#L1-L154)
+- [payment-success.html:1-219](file://payment-success.html#L1-L219)
+- [orders-data.json:1-66](file://orders-data.json#L1-L66)
+- [main.js:1-405](file://src/main.js#L1-L405)
+- [vercel.json:1-27](file://vercel.json#L1-L27)
+- [api/index.js:1-5](file://api/index.js#L1-L5)
+- [style.css:3947-4070](file://src/style.css#L3947-L4070)
 
 Key dependencies:
 - checkout.js depends on cartManager.js for state management
 - checkout.js communicates with enhanced server.js for order processing
+- checkout.js relies on style.css for mobile-responsive design
 - server.js integrates with Gym Master API for inventory management
 - server.js communicates with Paystack API for payment processing
 - payment.js depends on orders-data.json for persistent storage
@@ -488,9 +583,10 @@ Key dependencies:
 - Vercel deployment depends on api/index.js for serverless functions
 
 **Section sources**
-- [checkout.js](file://src/checkout.js#L1-L448)
-- [server.js](file://server.js#L1-L2281)
-- [payment.js](file://src/routes/payment.js#L1-L154)
+- [checkout.js:1-448](file://src/checkout.js#L1-L448)
+- [server.js:1-2281](file://server.js#L1-L2281)
+- [payment.js:1-154](file://src/routes/payment.js#L1-L154)
+- [style.css:3947-4070](file://src/style.css#L3947-L4070)
 
 ## Performance Considerations
 Several optimizations are implemented to ensure efficient checkout performance with enhanced Gym Master integration:
@@ -501,6 +597,7 @@ Several optimizations are implemented to ensure efficient checkout performance w
 - **Debounced Calculations**: Total calculations are performed efficiently during state changes
 - **Minimal DOM Manipulation**: Batch DOM updates to reduce reflows
 - **Conditional API Calls**: Gym Master API calls are only made when configured
+- **Mobile-First Approach**: Optimized CSS for better mobile performance
 
 ### Backend Optimizations
 - **Environment-Based API Base**: Uses localhost API for development, relative paths for production
@@ -520,6 +617,12 @@ Several optimizations are implemented to ensure efficient checkout performance w
 - **Resource Cleanup**: Event listeners are managed appropriately
 - **Storage Limits**: Cart state is stored efficiently in localStorage
 - **Conditional Resource Usage**: Gym Master resources are only used when configured
+
+### Mobile Performance Optimizations
+- **Reduced Animation Overhead**: Simplified animations for mobile devices
+- **Optimized Image Loading**: Efficient image handling for mobile networks
+- **Touch Event Optimization**: Better touch interaction handling
+- **Responsive Font Scaling**: Adaptive typography for various screen sizes
 
 ## Troubleshooting Guide
 
@@ -550,6 +653,11 @@ Several optimizations are implemented to ensure efficient checkout performance w
 - **Solution**: Verify vercel.json configuration and API base URL settings
 - **Debugging**: Check serverless function logs and API endpoint routing
 
+#### Mobile Responsiveness Issues
+- **Problem**: Checkout form not adapting to mobile screens
+- **Solution**: Verify media query breakpoints and responsive CSS
+- **Debugging**: Test on various screen sizes and orientations
+
 ### Enhanced Error Handling Patterns
 The checkout system implements comprehensive error handling with Gym Master integration:
 
@@ -558,6 +666,7 @@ The checkout system implements comprehensive error handling with Gym Master inte
 - **Network Errors**: Graceful degradation with retry suggestions and fallback mechanisms
 - **State Errors**: Recovery mechanisms for corrupted cart state
 - **Gym Master Errors**: Automatic fallback to local processing when Gym Master is unavailable
+- **Mobile Errors**: Specific handling for touch interaction and responsive layout issues
 
 #### Backend Error Handling
 - **API Validation**: Input sanitization and validation
@@ -567,19 +676,21 @@ The checkout system implements comprehensive error handling with Gym Master inte
 - **Serverless Errors**: Enhanced error handling for Vercel deployment
 
 **Section sources**
-- [checkout.js](file://src/checkout.js#L433-L446)
-- [server.js](file://server.js#L1865-L1868)
-- [payment.js](file://src/routes/payment.js#L106-L110)
+- [checkout.js:433-446](file://src/checkout.js#L433-L446)
+- [server.js:1865-1868](file://server.js#L1865-L1868)
+- [payment.js:106-110](file://src/routes/payment.js#L106-L110)
+- [style.css:3947-4070](file://src/style.css#L3947-L4070)
 
 ## Conclusion
-The checkout process implementation demonstrates robust architecture with clear separation of concerns, comprehensive error handling, and excellent user experience. The system now includes enhanced Gym Master integration with conditional processing, improved Paystack payment initialization, and better Vercel deployment compatibility. The system effectively integrates frontend validation with backend processing, maintains state persistence through localStorage, and provides seamless payment integration with external services. The modular design allows for easy maintenance and future enhancements while maintaining performance and reliability.
+The checkout process implementation demonstrates robust architecture with clear separation of concerns, comprehensive error handling, and excellent user experience. The system now includes enhanced mobile-responsive design with stacked layouts, touch-friendly input sizing, and improved cart sidebar functionality optimized for mobile users. The system effectively integrates frontend validation with backend processing, maintains state persistence through localStorage, and provides seamless payment integration with external services. The modular design allows for easy maintenance and future enhancements while maintaining performance and reliability.
 
 Key strengths include:
 - Comprehensive form validation and user feedback with Gym Master integration
 - Efficient cart state management with conditional API calls
 - Robust payment processing pipeline with fallback mechanisms
 - Clear error handling and recovery mechanisms with graceful degradation
-- Responsive and accessible user interface with enhanced deployment support
+- Responsive and accessible user interface with enhanced mobile optimization
 - Vercel-compatible serverless architecture for production deployment
+- Mobile-first design approach with progressive enhancement patterns
 
-The implementation serves as a solid foundation for e-commerce checkout functionality with room for extension and customization as business requirements evolve, now enhanced with professional Gym Master integration and enterprise-grade error handling.
+The implementation serves as a solid foundation for e-commerce checkout functionality with room for extension and customization as business requirements evolve, now enhanced with professional Gym Master integration and enterprise-grade error handling, plus comprehensive mobile-responsive design that ensures optimal user experience across all device types.
