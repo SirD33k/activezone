@@ -12,10 +12,10 @@
 
 ## Update Summary
 **Changes Made**
-- Enhanced CSS fallback mechanism for gallery image lazy loading animation
-- Added graceful degradation support for JavaScript-disabled environments
-- Improved accessibility with new CSS animation rules
-- Updated lazy loading strategy documentation
+- Updated documentation to reflect current state: laundry services integration is pending completion as indicated by commented-out gallery filter button
+- Added section on pending laundry services integration
+- Updated troubleshooting guide to address incomplete filter implementation
+- Enhanced documentation to cover current gallery functionality limitations
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -24,16 +24,17 @@
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
 6. [Enhanced Lazy Loading System](#enhanced-lazy-loading-system)
-7. [Dependency Analysis](#dependency-analysis)
-8. [Performance Considerations](#performance-considerations)
-9. [Troubleshooting Guide](#troubleshooting-guide)
-10. [Conclusion](#conclusion)
-11. [Appendices](#appendices)
+7. [Pending Laundry Services Integration](#pending-laundry-services-integration)
+8. [Dependency Analysis](#dependency-analysis)
+9. [Performance Considerations](#performance-considerations)
+10. [Troubleshooting Guide](#troubleshooting-guide)
+11. [Conclusion](#conclusion)
+12. [Appendices](#appendices)
 
 ## Introduction
 This document provides comprehensive documentation for the gallery system implemented in gallery.js. It covers the image gallery functionality including lightbox implementation, thumbnail navigation, image loading optimization, and responsive gallery layouts. It explains the gallery initialization process, event handling for image selection, and modal display management. It also details the integration with static image assets, lazy loading strategies, and performance optimization techniques. Examples of gallery configuration options, custom event handling, and accessibility features are included. The relationship between gallery.js and the main application is shown, demonstrating how galleries integrate with different page types. Browser compatibility, progressive enhancement techniques, and fallback strategies for unsupported browsers are addressed.
 
-**Updated** Enhanced with new CSS fallback mechanism for graceful degradation when JavaScript is disabled, providing improved accessibility and user experience across all environments.
+**Updated** Enhanced with documentation about pending laundry services integration, which is currently incomplete as indicated by the commented-out gallery filter button in gallery.html.
 
 ## Project Structure
 The gallery system is implemented as a standalone module that integrates with the main application via the gallery page and shared styles. The gallery page defines the HTML structure for the masonry gallery and lightbox, while the gallery script handles filtering, lightbox interactions, and navigation. The main application script provides global enhancements such as lazy loading and cross-page navigation.
@@ -61,19 +62,19 @@ VC --> GH
 ```
 
 **Diagram sources**
-- [gallery.html](file://gallery.html#L1-L536)
-- [gallery.js](file://src/gallery.js#L1-L169)
-- [style.css](file://src/style.css#L2216-L2458)
-- [main.js](file://src/main.js#L1-L405)
-- [server.js](file://server.js#L1-L800)
-- [vite.config.js](file://vite.config.js#L1-L20)
+- [gallery.html:1-536](file://gallery.html#L1-L536)
+- [gallery.js:1-169](file://src/gallery.js#L1-L169)
+- [style.css:2216-2458](file://src/style.css#L2216-L2458)
+- [main.js:1-405](file://src/main.js#L1-L405)
+- [server.js:1-800](file://server.js#L1-L800)
+- [vite.config.js:1-20](file://vite.config.js#L1-L20)
 
 **Section sources**
-- [gallery.html](file://gallery.html#L1-L536)
-- [gallery.js](file://src/gallery.js#L1-L169)
-- [style.css](file://src/style.css#L2216-L2458)
-- [main.js](file://src/main.js#L1-L405)
-- [vite.config.js](file://vite.config.js#L1-L20)
+- [gallery.html:1-536](file://gallery.html#L1-L536)
+- [gallery.js:1-169](file://src/gallery.js#L1-L169)
+- [style.css:2216-2458](file://src/style.css#L2216-L2458)
+- [main.js:1-405](file://src/main.js#L1-L405)
+- [vite.config.js:1-20](file://vite.config.js#L1-L20)
 
 ## Core Components
 The gallery system consists of two primary components:
@@ -88,12 +89,12 @@ Key features include:
 - Accessibility attributes for screen readers and keyboard navigation
 - Graceful degradation support for JavaScript-disabled environments
 
-**Updated** Added graceful degradation support through CSS fallback animations for images with `loading="lazy"` attribute.
+**Updated** The gallery currently supports filtering for gym, salon, football pitch, games, restaurant, aerobics, and spa categories. The laundry services integration is pending completion as indicated by the commented-out events filter button.
 
 **Section sources**
-- [gallery.js](file://src/gallery.js#L6-L59)
-- [gallery.js](file://src/gallery.js#L61-L168)
-- [style.css](file://src/style.css#L2265-L2458)
+- [gallery.js:6-59](file://src/gallery.js#L6-L59)
+- [gallery.js:61-168](file://src/gallery.js#L61-L168)
+- [style.css:2265-2458](file://src/style.css#L2265-L2458)
 
 ## Architecture Overview
 The gallery system follows a modular architecture with clear separation of concerns:
@@ -121,9 +122,9 @@ L->>U : Show Next/Previous Image
 ```
 
 **Diagram sources**
-- [gallery.js](file://src/gallery.js#L14-L59)
-- [gallery.js](file://src/gallery.js#L84-L167)
-- [gallery.html](file://gallery.html#L488-L500)
+- [gallery.js:14-59](file://src/gallery.js#L14-L59)
+- [gallery.js:84-167](file://src/gallery.js#L84-L167)
+- [gallery.html:488-500](file://gallery.html#L488-L500)
 
 ## Detailed Component Analysis
 
@@ -147,7 +148,7 @@ MoreItems --> |No| End(["Filter Complete"])
 ```
 
 **Diagram sources**
-- [gallery.js](file://src/gallery.js#L14-L59)
+- [gallery.js:14-59](file://src/gallery.js#L14-L59)
 
 Key implementation details:
 - Event delegation through forEach iteration
@@ -156,8 +157,8 @@ Key implementation details:
 - Visibility control through hidden class application
 
 **Section sources**
-- [gallery.js](file://src/gallery.js#L6-L59)
-- [gallery.html](file://gallery.html#L50-L61)
+- [gallery.js:6-59](file://src/gallery.js#L6-L59)
+- [gallery.html:50-61](file://gallery.html#L50-L61)
 
 ### Lightbox Modal Implementation
 The lightbox provides a full-screen modal for displaying selected gallery images with navigation controls.
@@ -192,8 +193,8 @@ LightboxSystem --> NavigationControls : "uses"
 ```
 
 **Diagram sources**
-- [gallery.js](file://src/gallery.js#L61-L168)
-- [gallery.html](file://gallery.html#L488-L500)
+- [gallery.js:61-168](file://src/gallery.js#L61-L168)
+- [gallery.html:488-500](file://gallery.html#L488-L500)
 
 Core functionality includes:
 - Modal activation with body overflow control
@@ -202,8 +203,8 @@ Core functionality includes:
 - Background click and escape key closing mechanisms
 
 **Section sources**
-- [gallery.js](file://src/gallery.js#L61-L168)
-- [gallery.html](file://gallery.html#L488-L500)
+- [gallery.js:61-168](file://src/gallery.js#L61-L168)
+- [gallery.html:488-500](file://gallery.html#L488-L500)
 
 ### Responsive Gallery Layout
 The gallery employs CSS Grid for responsive masonry layout with flexible sizing and automatic row spanning.
@@ -225,7 +226,7 @@ Wide["Wide Item"] --> SpanCols["Span 2 Columns"]
 ```
 
 **Diagram sources**
-- [style.css](file://src/style.css#L2265-L2335)
+- [style.css:2265-2335](file://src/style.css#L2265-L2335)
 
 Responsive characteristics:
 - Fluid column widths with minimum constraints
@@ -234,7 +235,7 @@ Responsive characteristics:
 - Flexible tall/wide variants for varied content
 
 **Section sources**
-- [style.css](file://src/style.css#L2265-L2335)
+- [style.css:2265-2335](file://src/style.css#L2265-L2335)
 
 ### Integration with Main Application
 The gallery system integrates seamlessly with the main application through shared scripts and styles.
@@ -256,8 +257,8 @@ MC --> MS
 ```
 
 **Diagram sources**
-- [gallery.html](file://gallery.html#L532-L533)
-- [main.js](file://src/main.js#L1-L405)
+- [gallery.html:532-533](file://gallery.html#L532-L533)
+- [main.js:1-405](file://src/main.js#L1-L405)
 
 Integration points:
 - Shared CSS for consistent styling
@@ -266,8 +267,8 @@ Integration points:
 - Cross-page navigation support
 
 **Section sources**
-- [gallery.html](file://gallery.html#L532-L533)
-- [main.js](file://src/main.js#L1-L405)
+- [gallery.html:532-533](file://gallery.html#L532-L533)
+- [main.js:1-405](file://src/main.js#L1-L405)
 
 ## Enhanced Lazy Loading System
 
@@ -310,8 +311,47 @@ The system provides multiple layers of fallback:
 - **Fallback Priority**: CSS animation runs regardless of JavaScript state
 
 **Section sources**
-- [main.js](file://src/main.js#L219-L234)
-- [style.css](file://src/style.css#L3470-L3483)
+- [main.js:219-234](file://src/main.js#L219-L234)
+- [style.css:3470-3483](file://src/style.css#L3470-L3483)
+
+## Pending Laundry Services Integration
+
+**Updated** The gallery system currently has incomplete integration with laundry services. A filter button for "Events" (which corresponds to laundry services) is present but commented out in the HTML, indicating the feature is pending completion.
+
+### Current Filter Categories
+The gallery currently supports the following categories:
+- All (shows all items)
+- Gym
+- Salon
+- Football
+- Games
+- Restaurant
+- Aerobics
+- SPA
+
+### Pending Laundry Services Filter
+The commented-out filter button indicates that laundry services integration is planned but not yet implemented:
+
+```html
+<!-- <button class="gallery-filter-btn" data-filter="events">Events</button> -->
+```
+
+### Implementation Status
+- **Filter Button**: Present but commented out in HTML
+- **Category Data**: No corresponding masonry items with `data-category="events"`
+- **Lightbox Integration**: Not implemented for laundry service images
+- **Navigation**: No dedicated navigation for laundry services
+
+### Expected Implementation
+When completed, the laundry services integration should include:
+- Active filter button for "Events" category
+- Corresponding masonry items with `data-category="events"`
+- Lightbox integration for laundry service images
+- Proper navigation and filtering functionality
+
+**Section sources**
+- [gallery.html:59-61](file://gallery.html#L59-L61)
+- [gallery.js:14-59](file://src/gallery.js#L14-L59)
 
 ## Dependency Analysis
 The gallery system has minimal external dependencies and maintains loose coupling with the broader application.
@@ -337,10 +377,10 @@ VC --> GH
 ```
 
 **Diagram sources**
-- [gallery.js](file://src/gallery.js#L1-L169)
-- [main.js](file://src/main.js#L1-L405)
-- [server.js](file://server.js#L1-L800)
-- [vite.config.js](file://vite.config.js#L1-L20)
+- [gallery.js:1-169](file://src/gallery.js#L1-L169)
+- [main.js:1-405](file://src/main.js#L1-L405)
+- [server.js:1-800](file://server.js#L1-L800)
+- [vite.config.js:1-20](file://vite.config.js#L1-L20)
 
 Dependency relationships:
 - gallery.js depends on gallery.html structure
@@ -350,10 +390,10 @@ Dependency relationships:
 - vite.config.js manages build configuration
 
 **Section sources**
-- [gallery.js](file://src/gallery.js#L1-L169)
-- [main.js](file://src/main.js#L1-L405)
-- [server.js](file://server.js#L1-L800)
-- [vite.config.js](file://vite.config.js#L1-L20)
+- [gallery.js:1-169](file://src/gallery.js#L1-L169)
+- [main.js:1-405](file://src/main.js#L1-L405)
+- [server.js:1-800](file://server.js#L1-L800)
+- [vite.config.js:1-20](file://vite.config.js#L1-L20)
 
 ## Performance Considerations
 The gallery system implements several performance optimization techniques:
@@ -384,9 +424,9 @@ The masonry layout uses CSS Grid with:
 - Maintaining accessibility standards for all users
 
 **Section sources**
-- [main.js](file://src/main.js#L219-L234)
-- [style.css](file://src/style.css#L2265-L2335)
-- [gallery.js](file://src/gallery.js#L14-L59)
+- [main.js:219-234](file://src/main.js#L219-L234)
+- [style.css:2265-2335](file://src/style.css#L2265-L2335)
+- [gallery.js:14-59](file://src/gallery.js#L14-L59)
 
 ## Troubleshooting Guide
 Common issues and solutions for the gallery system:
@@ -425,13 +465,22 @@ Common issues and solutions for the gallery system:
 - Verify CSS animation rules are not being blocked
 - Check browser compatibility for CSS animations
 
+### Pending Laundry Services Issues
+**Updated** For the incomplete laundry services integration:
+- Verify that the commented filter button is properly uncommented
+- Ensure corresponding masonry items exist with `data-category="events"`
+- Check that lightbox functionality works for laundry service images
+- Confirm navigation between categories functions correctly
+
 **Section sources**
-- [gallery.js](file://src/gallery.js#L70-L74)
-- [gallery.js](file://src/gallery.js#L84-L104)
-- [style.css](file://src/style.css#L2265-L2335)
+- [gallery.js:70-74](file://src/gallery.js#L70-L74)
+- [gallery.js:84-104](file://src/gallery.js#L84-L104)
+- [style.css:2265-2335](file://src/style.css#L2265-L2335)
 
 ## Conclusion
 The gallery system provides a robust, accessible, and performant solution for displaying image collections with advanced filtering and modal viewing capabilities. Its modular architecture ensures maintainability and extensibility while maintaining seamless integration with the broader application ecosystem. The implementation demonstrates best practices in responsive design, accessibility, and performance optimization. The enhanced CSS fallback mechanism and graceful degradation support ensure reliable functionality across all environments, including JavaScript-disabled scenarios.
+
+**Updated** The system currently supports comprehensive filtering for fitness, beauty, and recreational facilities, with the laundry services integration pending completion. The commented-out filter button indicates this feature is planned but requires implementation to provide complete functionality.
 
 ## Appendices
 
@@ -465,3 +514,13 @@ The gallery system supports the following configuration patterns:
 - Manual class addition for successful loads
 - Smooth opacity transitions for better UX
 - Compatibility with all modern browsers
+
+### Pending Integration Checklist
+**Updated** For completing the laundry services integration:
+- Uncomment the filter button in gallery.html
+- Add corresponding masonry items with `data-category="events"`
+- Implement lightbox functionality for laundry images
+- Test navigation and filtering functionality
+- Verify responsive design compatibility
+- Update documentation and testing procedures
+</existing>
